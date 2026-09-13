@@ -1,0 +1,27 @@
+# TalentoBR CV Screener — deps do protótipo (v0.5)
+# Versões pinadas pra dar reprodutibilidade. Quem pegar: revise antes de subir.
+
+# --- API + UI ---
+fastapi==0.115.6
+uvicorn==0.34.0
+streamlit==1.41.1
+requests==2.32.3
+
+# --- LLM ---
+openai==1.59.2
+# Alternativa mencionada nos comentários (Anthropic, um modelo Claude pequeno):
+# anthropic==0.42.0   # descomente se for trocar de provedor em src/scoring.py
+
+# --- Parsing ---
+pypdf==5.1.0
+
+# --- Config ---
+python-dotenv==1.0.1
+
+# --- Testes (rodam offline, LLM mockado) ---
+pytest==8.3.4
+httpx==0.28.1   # necessário pro fastapi.testclient.TestClient
+
+# NOTA: tiramos o pandas — não era usado no pipeline de scoring.
+# AINDA FALTA (dívida): supabase/postgres (persistência), langfuse (auditoria/
+# observabilidade), libs de auth e de métricas de viés. Ver README.

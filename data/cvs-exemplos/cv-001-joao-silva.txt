@@ -1,0 +1,43 @@
+JOÃO HENRIQUE DA SILVA NETO
+Desenvolvedor Backend Python | Sênior em formação
+
+Contato
+--------
+E-mail: joao.silva.exemplo@email-ficticio.com.br
+Telefone: (11) 9xxxx-0001
+LinkedIn: linkedin.com/in/joao-silva-exemplo
+Localização: São Paulo - SP
+
+Resumo Profissional
+-------------------
+Desenvolvedor backend com 5 anos de experiência em Python, especializado em APIs REST de alta carga, microsserviços e integração com bancos relacionais e NoSQL. Atuação em ambientes ágeis com forte ênfase em testes automatizados, observabilidade e boas práticas de engenharia. Interesse crescente em integração com modelos de IA e pipelines de dados.
+
+Experiência Profissional
+------------------------
+Tech Lead Backend — FinPagar Tecnologia (jan/2023 - atual)
+- Liderança técnica de squad de 4 pessoas em plataforma de meios de pagamento.
+- Migração de monolito Django para arquitetura de microsserviços em FastAPI.
+- Redução de p99 de 1.2s para 280ms em endpoints críticos.
+
+Desenvolvedor Backend Pleno — Comércio Direto S/A (mar/2021 - dez/2022)
+- Desenvolvimento de APIs em Flask para integração com marketplaces.
+- Implementação de filas com RabbitMQ e workers Celery.
+
+Desenvolvedor Backend Júnior — Startup Logística X (mai/2019 - fev/2021)
+- Primeiras APIs em Python, manutenção de scripts ETL, testes em pytest.
+
+Formação
+--------
+Bacharelado em Ciência da Computação — Universidade Estadual de Campinas (2014-2018)
+
+Skills Técnicas
+---------------
+Linguagens: Python (avançado), SQL, Bash, alguma coisa de Go
+Frameworks: FastAPI, Django, Flask, SQLAlchemy
+Infra: Docker, Kubernetes (básico), AWS (EC2, RDS, S3, Lambda)
+Bancos: PostgreSQL, Redis, MongoDB
+Outros: Git, CI/CD (GitHub Actions), pytest, OpenTelemetry
+
+Idiomas
+-------
+Português (nativo), Inglês (avançado), Espanhol (básico)

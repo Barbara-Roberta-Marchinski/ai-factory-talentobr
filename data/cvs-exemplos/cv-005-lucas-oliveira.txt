@@ -1,0 +1,46 @@
+LUCAS GABRIEL OLIVEIRA MENDES
+Recém-formado | Estágio em Machine Learning
+
+Contato
+--------
+E-mail: lucas.oliveira.exemplo@email-ficticio.com.br
+Telefone: (85) 9xxxx-0005
+LinkedIn: linkedin.com/in/lucas-oliveira-exemplo
+Localização: Fortaleza - CE (aberto a relocação)
+
+Resumo Profissional
+-------------------
+Recém-formado em Engenharia de Computação com experiência de estágio em time de Machine Learning. Forte base em fundamentos (álgebra linear, estatística, otimização) e prática crescente em projetos aplicados. Busco primeira oportunidade efetiva como AI Engineer ou Cientista de Dados Júnior, com interesse particular em LLMs e sistemas de recomendação.
+
+Experiência Profissional
+------------------------
+Estagiário em Machine Learning — Centro de Pesquisa Aplicada Local (mar/2024 - dez/2025)
+- 22 meses de estágio em projeto financiado por edital estadual.
+- Contribuição em pipeline de classificação de imagens de cultivo agrícola (PyTorch).
+- Implementação de baseline com regressão logística e modelos de árvore.
+- Colaboração em artigo apresentado em workshop nacional (2025).
+
+Iniciação Científica — UFC (ago/2022 - fev/2024)
+- Estudo de algoritmos clássicos de NLP em corpora de português.
+- Bolsa CNPq.
+
+Formação
+--------
+Bacharelado em Engenharia de Computação — Universidade Federal do Ceará (2020-2025) — concluído dez/2025
+- Trabalho de conclusão: "Fine-tuning de modelos compactos de linguagem para domínios de baixo recurso"
+- CRA: 8.7
+
+Skills Técnicas
+---------------
+Linguagens: Python, C, alguma coisa de Rust
+Bibliotecas: scikit-learn, PyTorch (intermediário), Hugging Face Transformers, pandas, NumPy
+Outros: Git, Linux, LaTeX, Docker (básico), SQL
+Conhecimentos teóricos: estatística inferencial, álgebra linear, otimização, fundamentos de RL
+
+Idiomas
+-------
+Português (nativo), Inglês (intermediário — leitura técnica avançada)
+
+Outros
+------
+Voluntário em curso comunitário de programação para adolescentes (2023-atual).

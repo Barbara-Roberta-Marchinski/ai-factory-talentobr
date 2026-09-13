@@ -1,0 +1,46 @@
+ANA BEATRIZ RODRIGUES FONTES
+UX Designer em transição para AI Engineer | 6 anos de experiência total
+
+Contato
+--------
+E-mail: ana.rodrigues.exemplo@email-ficticio.com.br
+Telefone: (51) 9xxxx-0004
+LinkedIn: linkedin.com/in/ana-rodrigues-exemplo
+Localização: Porto Alegre - RS
+
+Resumo Profissional
+-------------------
+Profissional com 6 anos de experiência em UX/Product Design, atualmente em transição estruturada para a área de AI Engineering. Atuação consistente em produtos de impacto social e financeiro. Nos últimos 14 meses, dedicação intensiva a estudos de LLMs, engenharia de prompts e arquitetura de aplicações com IA generativa, com dois projetos pessoais publicados.
+
+Experiência Profissional
+------------------------
+Senior Product Designer (com escopo de AI) — Cooperativa Fintech Sul (abr/2023 - atual)
+- Design de fluxos de produto e, desde 2024, prototipação de features com LLMs.
+- Co-construção de assistente conversacional interno (RAG sobre documentação).
+- Estudo formal de LangChain, OpenAI API, embeddings.
+
+Product Designer — Empresa de Educação Digital (jun/2020 - mar/2023)
+- Design de plataforma de cursos para 200k alunos.
+- Pesquisa qualitativa e quantitativa, design system.
+
+UX Designer Júnior — Estúdio de Design (jan/2019 - mai/2020)
+- Projetos de interface para clientes diversos.
+
+Projetos pessoais (transição)
+- Chatbot de apoio a pequenos lojistas (publicado em jul/2025), Python + OpenAI.
+- Avaliador de redações com feedback estruturado (set/2025), FastAPI + GPT.
+
+Formação
+--------
+Bacharelado em Design — UFRGS (2014-2018)
+Bootcamp Intensivo em AI Engineering (2024-2025) — curso online de 9 meses
+
+Skills
+------
+UX: pesquisa, prototipação (Figma), design system, acessibilidade
+AI/Tech: Python (intermediário), OpenAI API, LangChain, FastAPI básico, prompt engineering, embeddings, pgvector (estudando)
+Outros: SQL básico, Git, Notion
+
+Idiomas
+-------
+Português (nativo), Inglês (avançado), Espanhol (intermediário)

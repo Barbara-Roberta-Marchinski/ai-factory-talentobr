@@ -1,0 +1,44 @@
+MARIA EDUARDA SANTOS COUTINHO
+Cientista de Dados | Recém-formada com 3 anos de experiência
+
+Contato
+--------
+E-mail: maria.santos.exemplo@email-ficticio.com.br
+Telefone: (21) 9xxxx-0002
+LinkedIn: linkedin.com/in/maria-santos-exemplo
+Localização: Rio de Janeiro - RJ
+
+Resumo Profissional
+-------------------
+Cientista de dados com formação acadêmica recente e três anos de experiência prática em projetos de modelagem preditiva, NLP e análises exploratórias para o setor de varejo e fintech. Apaixonada por traduzir negócio em dado e dado em decisão. Forte interesse em LLMs aplicados e MLOps.
+
+Experiência Profissional
+------------------------
+Data Scientist — VareJunto Analytics (abr/2024 - atual)
+- Desenvolvimento de modelo de churn para base de 2 milhões de clientes (LightGBM).
+- Pipeline de feature engineering em PySpark.
+- Apresentação semanal de resultados para áreas de negócio.
+
+Data Analyst — Banco Digital Y (out/2022 - mar/2024)
+- Análises ad-hoc para Marketing e CRM, dashboards em Looker.
+- Primeira experiência com modelos supervisionados (regressão logística para propensão de produto).
+
+Estagiária de Dados — Consultoria Pequena (jan/2022 - set/2022)
+- Limpeza de dados, SQL, primeiros notebooks.
+
+Formação
+--------
+Mestrado em Estatística — Universidade Federal do Rio de Janeiro (2022-2024) — concluído
+Bacharelado em Matemática Aplicada — UFRJ (2018-2021)
+
+Skills Técnicas
+---------------
+Linguagens: Python, R, SQL
+Bibliotecas: scikit-learn, pandas, PySpark, LightGBM, statsmodels, spaCy
+Cloud: AWS (SageMaker básico), GCP (BigQuery)
+Visualização: Looker, matplotlib, seaborn, Streamlit (estudando)
+Outros: Git, Jupyter, MLflow (introdutório)
+
+Idiomas
+-------
+Português (nativo), Inglês (intermediário avançado)

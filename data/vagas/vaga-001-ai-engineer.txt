@@ -1,0 +1,35 @@
+VAGA — AI Engineer Pleno
+Empresa: PagaFácil Fintech (cliente TalentoBR)
+Modelo: Híbrido (2x/semana presencial em São Paulo - SP) | aberto a remoto para candidatos de qualquer região
+Faixa salarial: R$ 14.000 - R$ 19.000 + PLR + benefícios
+
+Sobre a vaga
+------------
+A PagaFácil busca uma pessoa AI Engineer Pleno para integrar o time de Plataforma de IA, responsável por levar protótipos de cientistas de dados para produção em escala. A vaga é para atuar em sistemas de detecção de fraude assistida por LLM, classificação de atendimento e automação de back-office.
+
+Responsabilidades
+-----------------
+- Transformar notebooks de DS em serviços produtivos (API, observabilidade, custo).
+- Desenhar e operar pipelines de inferência com modelos de linguagem (OpenAI, Anthropic, modelos open-source self-hosted).
+- Implementar guardrails, avaliações automáticas e monitoramento de drift.
+- Trabalhar próximo a Produto e Compliance (a fintech é regulada pelo BACEN).
+- Mentoria de pessoas júnior.
+
+Requisitos obrigatórios
+-----------------------
+- 3+ anos de experiência em engenharia de software, preferencialmente em Python.
+- Experiência prática com APIs REST (FastAPI, Flask ou similar).
+- Conhecimento de bancos relacionais e Docker.
+- Familiaridade com LLMs em produção (prompt engineering, RAG, function calling).
+- Inglês técnico (leitura).
+
+Diferenciais
+------------
+- Experiência com observabilidade de LLMs (Langfuse, LangSmith, Helicone).
+- Conhecimento de LGPD aplicada a IA.
+- Experiência prévia em setor regulado (financeiro, saúde).
+- Contribuições open source.
+
+Benefícios
+----------
+VR/VA, plano de saúde, auxílio home-office, stock options, orçamento anual de educação.

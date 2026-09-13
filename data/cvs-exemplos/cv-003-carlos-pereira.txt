@@ -1,0 +1,48 @@
+CARLOS AUGUSTO PEREIRA DE MATTOS
+Desenvolvedor Fullstack TypeScript | 8 anos de experiência
+
+Contato
+--------
+E-mail: carlos.pereira.exemplo@email-ficticio.com.br
+Telefone: (31) 9xxxx-0003
+LinkedIn: linkedin.com/in/carlos-pereira-exemplo
+Localização: Belo Horizonte - MG (aberto a remoto)
+
+Resumo Profissional
+-------------------
+Desenvolvedor fullstack com 8 anos de experiência em desenvolvimento web, atuando majoritariamente com TypeScript em ambos os lados da stack. Migrou de carreira aos 32 anos vindo da área de engenharia mecânica, o que trouxe forte raciocínio sistêmico e atenção a requisitos. Atualmente liderando frente de plataforma interna numa healthtech.
+
+Experiência Profissional
+------------------------
+Engenheiro de Software Sênior — HealthTech Norte (fev/2022 - atual)
+- Liderança técnica de plataforma de prontuário em Next.js + Node + PostgreSQL.
+- Arquitetura de módulo de prescrição com auditoria full (compliance ANS).
+- Mentoria de 6 pessoas em frente fullstack.
+
+Engenheiro de Software Pleno — Agência Digital Mineira (ago/2019 - jan/2022)
+- Projetos de e-commerce em React, Next.js, Express.
+- Integrações com gateways de pagamento e ERPs.
+
+Desenvolvedor Júnior — Software House Local (mai/2017 - jul/2019)
+- Manutenção de sistemas legados em PHP, gradual migração para Node.
+
+Experiência anterior à transição
+- Engenheiro Mecânico Júnior — Indústria Auto (2014-2016)
+
+Formação
+--------
+Bacharelado em Engenharia Mecânica — UFMG (2009-2013)
+Curso intensivo Fullstack — Escola de Programação Online (2017)
+
+Skills Técnicas
+---------------
+Linguagens: TypeScript, JavaScript, Node.js, Python (uso ocasional)
+Frontend: React, Next.js, TailwindCSS, Zustand
+Backend: NestJS, Express, Prisma, tRPC
+Bancos: PostgreSQL, Redis, ElasticSearch
+Infra: Vercel, AWS (ECS, RDS), Docker, Terraform (básico)
+Outros: TDD, design systems, acessibilidade (WCAG)
+
+Idiomas
+-------
+Português (nativo), Inglês (fluente)
