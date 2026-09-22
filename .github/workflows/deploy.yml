@@ -16,4 +16,4 @@ jobs:
       - name: Push to HF Spaces
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://bmarchinski:$HF_TOKEN@huggingface.co/spaces/bmarchinski/ai-factory-talentobr main
+        run: git push --force https://huggingface.co/spaces/bmarchinski/talentobr-app
