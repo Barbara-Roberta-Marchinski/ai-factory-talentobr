@@ -1,3 +1,17 @@
+
+
+
+
+---
+title: TalentoBR
+emoji: 🏢
+colorFrom: blue
+colorTo: indigo
+sdk: streamlit
+app_file: ui.py
+pinned: false
+---
+
 # TalentoBR — CV Screener (passagem de bastão do time de Data)
 
 Oi. Aqui é o time de Data da TalentoBR. 👋

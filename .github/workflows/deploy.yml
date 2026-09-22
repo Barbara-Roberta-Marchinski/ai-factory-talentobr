@@ -1,0 +1,17 @@
+name: Deploy to Hugging Face
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Push to HF Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: git push --force https://bmarchinski:$HF_TOKEN@huggingface.co/spaces/bmarchinski/ai-factory-talentobr main
