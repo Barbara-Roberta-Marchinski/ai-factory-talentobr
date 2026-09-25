@@ -16,4 +16,4 @@ jobs:
       - name: Push to HF Spaces
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: run: git push --force https://BarbaraRM:${HF_TOKEN}@huggingface.co/spaces/BarbaraRM/talentobr-app main main
+        run: git push --force https://BarbaraRM:${HF_TOKEN}@huggingface.co/spaces/BarbaraRM/talentobr-app main main
