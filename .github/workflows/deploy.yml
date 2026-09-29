@@ -1,4 +1,4 @@
-name: Deploy to Hugging Face
+name: Deploy to render
 
 on:
   push:

@@ -269,7 +269,40 @@ ficaria atrás de uma superfície de abuso ampla.
 5. Integrar secret scanning ao repositório e ao CI, revisar histórico de
    commits e documentar o procedimento de resposta a vazamento.
 
-## 6. Lacunas técnicas adicionais que aumentam o risco
+## 6. Arquitetura Acoplada e Dependência de Localhost
+
+### Descrição do Problema
+
+O frontend (`ui.py`) define a URL da API de forma fixa como
+`http://localhost:8000`. Essa configuração pressupõe que a interface web e a
+API de score estão executando na mesma máquina e que a API está disponível na
+porta local 8000. A URL não é configurável por ambiente.
+
+### Impacto no Negócio/Custos
+
+- Na nuvem, frontend e API executados como serviços separados não compartilham
+  o mesmo `localhost`. A interface tenta localizar o “cérebro” do sistema na
+  própria máquina virtual/container e não no serviço de API, causando falha
+  imediata de comunicação, tipicamente `Connection refused`.
+- O recrutador fica impossibilitado de submeter currículos ou receber scores,
+  interrompendo o fluxo principal do produto e tornando o deploy inoperante.
+- A configuração fixa também impede promover a mesma aplicação entre
+  desenvolvimento, homologação e produção sem alterações no código, elevando
+  o risco operacional e o tempo de diagnóstico.
+
+### Recomendação de Correção
+
+1. Dividir a aplicação em dois Web Services distintos: um para a interface
+   Streamlit e outro para a API FastAPI, cada qual com seu próprio deploy e
+   endpoint acessível pela rede.
+2. Substituir a URL fixa por uma variável de ambiente, por exemplo
+   `API_BASE_URL`, configurada com o endereço HTTPS da API em cada ambiente.
+3. Validar a presença e o formato da URL na inicialização da interface, e
+   apresentar erros operacionais claros quando a API estiver indisponível.
+4. Configurar comunicação segura entre os serviços e cobrir a URL de API de
+   cada ambiente com testes de integração e health checks.
+
+## 7. Lacunas técnicas adicionais que aumentam o risco
 
 Além dos cinco pontos críticos, o próprio fluxo contém dívidas que devem entrar
 no plano de estabilização:
