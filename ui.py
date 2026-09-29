@@ -1,26 +1,10 @@
-"""
-UI do recrutador — TalentoBR CV Screener (Streamlit).
-
-Roda com:  streamlit run ui.py
-Precisa da API no ar (em outro terminal):  uvicorn app:app --reload
-
-Essa tela é proposital: o recrutador faz upload/cola um CV, cola a vaga, vê o
-score e a justificativa. O botão de decisão ("Concordo" / "Discordo") existe pra
-reforçar que QUEM DECIDE É A PESSOA (LGPD Art. 20) — mas hoje ele NÃO persiste
-nada. É só visual. Persistir essa decisão num log auditável é tarefa do desafio.
-
-Dívida herdada visível aqui:
-- URL da API hardcoded.
-- Sem login. Sem noção de tenant.
-- A decisão do recrutador não é gravada em lugar nenhum.
-"""
-
 import io
+import os
 
 import requests
 import streamlit as st
 
-API_URL = "http://localhost:8000"  # TODO: virar env var, hoje tá cravado
+API_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 
 def _ler_upload(arquivo) -> str:
