@@ -1,19 +1,3 @@
-"""
-API de scoring do TalentoBR CV Screener.
-
-Roda com:  uvicorn app:app --reload
-Sobe em:   http://localhost:8000  (docs em /docs)
-
-Endpoint principal: POST /score
-Recebe o texto de um CV + a vaga, devolve score 0-100 + justificativa.
-
-ATENÇÃO (dívida herdada, ver README):
-- NÃO tem autenticação. NÃO é multi-tenant. Qualquer um que alcançar a porta
-  manda CV pra dentro. Cliente A e cliente B compartilhariam tudo. NÃO suba isso
-  exposto.
-- NÃO tem log de auditoria (LGPD Art. 20). Nada é persistido.
-- Sem rate limit, sem cache, sem observabilidade.
-"""
 
 from fastapi import FastAPI
 from pydantic import BaseModel, Field

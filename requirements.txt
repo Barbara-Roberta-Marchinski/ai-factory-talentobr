@@ -20,6 +20,3 @@ python-dotenv==1.0.1
 pytest==8.3.4
 httpx==0.28.1   # necessário pro fastapi.testclient.TestClient
 
-# NOTA: tiramos o pandas — não era usado no pipeline de scoring.
-# AINDA FALTA (dívida): supabase/postgres (persistência), langfuse (auditoria/
-# observabilidade), libs de auth e de métricas de viés. Ver README.

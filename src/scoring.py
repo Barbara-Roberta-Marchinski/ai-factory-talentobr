@@ -1,32 +1,11 @@
-"""
-Lógica de scoring do TalentoBR CV Screener.
 
-Esse arquivo é, basicamente, o miolo do notebook v0.4 do time de Data
-extraído pra um módulo de verdade. A matemática do score continua a mesma:
-
-    score_final = 0.4 * score_heuristico + 0.6 * score_llm
-
-A heurística é determinística (overlap de skills). A parte do LLM é o
-"julgamento" + justificativa em texto livre.
-
-OBS importantes (leia antes de confiar nisso):
-- A "justificativa" é gerada pelo próprio modelo DEPOIS do score. É post-hoc,
-  não é explicação fiel. Não use como laudo.
-- O viés que a gente observou no notebook (mulher e 50+ pontuando menos,
-  universidade de capital pontuando mais, currículo em inglês pontuando mais)
-  CONTINUA AQUI. Não foi mitigado. Ver README -> "Dívida técnica herdada".
-- Provedor: Anthropic, modelo Claude Haiku (`claude-3-haiku-20240307`).
-
-TODO (quem pegar): versionar o prompt, medir custo real, e por favor escrever
-o mapa de viés antes de qualquer deploy.
-"""
 
 import os
 import json
 from pathlib import Path
 
 # Modelo pequeno para chamadas de extração e scoring.
-MODEL = "claude-3-haiku-20240307"
+MODEL = "claude-3-5-haiku-20241022"
 
 # Pesos do blend. Hardcoded mesmo — TODO: virar config/env e justificar a escolha.
 PESO_HEURISTICA = 0.4
