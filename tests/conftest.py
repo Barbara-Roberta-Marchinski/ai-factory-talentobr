@@ -1,8 +1,8 @@
 """
 Config compartilhada dos testes.
 
-REGRA DE OURO: nenhum teste pode tocar a rede / OpenAI. Tudo que é LLM é
-mockado via monkeypatch. Não precisa de OPENAI_API_KEY pra rodar `pytest`.
+REGRA DE OURO: nenhum teste pode tocar a rede / Anthropic. Tudo que é LLM é
+mockado via monkeypatch. Não precisa de ANTHROPIC_API_KEY pra rodar `pytest`.
 
 Garante que a raiz do projeto está no sys.path pra `import src...` e `import app`
 funcionarem rodando `pytest` da raiz.

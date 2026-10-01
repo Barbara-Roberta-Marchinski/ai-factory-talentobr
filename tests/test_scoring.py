@@ -8,6 +8,8 @@ Cobre:
 """
 
 from pathlib import Path
+import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -83,3 +85,57 @@ def test_match_score_aplica_blend_0_4_0_6(monkeypatch):
     assert out["score_final"] == 68
     assert out["modelo"] == scoring.MODEL
     assert out["justificativa"] == "ok (mock)"
+
+
+def test_chamar_llm_usa_anthropic_e_retorna_json(monkeypatch):
+    chamada = {}
+
+    class FakeAnthropic:
+        def __init__(self, api_key):
+            chamada["api_key"] = api_key
+            self.messages = self
+
+        def create(self, **kwargs):
+            chamada["request"] = kwargs
+            return SimpleNamespace(
+                content=[
+                    SimpleNamespace(
+                        type="text",
+                        text='{"score_llm": 82, "justificativa": "Boa aderência"}',
+                    )
+                ]
+            )
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setitem(
+        sys.modules,
+        "anthropic",
+        SimpleNamespace(Anthropic=FakeAnthropic),
+    )
+
+    resultado = scoring._chamar_llm("prompt de teste")
+
+    assert chamada["api_key"] == "test-key"
+    assert chamada["request"]["model"] == "claude-3-haiku-20240307"
+    assert chamada["request"]["max_tokens"] == 4096
+    assert chamada["request"]["temperature"] == 0
+    assert chamada["request"]["messages"] == [
+        {"role": "user", "content": "prompt de teste"}
+    ]
+    assert resultado == {"score_llm": 82, "justificativa": "Boa aderência"}
+
+
+def test_chamar_llm_falha_sem_chave_anthropic(monkeypatch):
+    class FakeAnthropic:
+        def __init__(self, api_key):
+            raise AssertionError("O client não deve ser criado sem chave.")
+
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setitem(
+        sys.modules,
+        "anthropic",
+        SimpleNamespace(Anthropic=FakeAnthropic),
+    )
+
+    with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
+        scoring._chamar_llm("prompt de teste")

@@ -99,9 +99,10 @@ texto completo diretamente no prompt, e `avaliar_com_llm` envia ao LLM os campos
 estruturados que incluem nome, e-mail, formação e experiência. Assim, dados
 pessoais e potencialmente sensíveis entram crus no provedor externo, sem
 mascaramento, minimização ou classificação prévia. O fluxo também representa
-transferência internacional de dados para a OpenAI, sem que o código evidencie
-base legal, mecanismo contratual, finalidade, retenção ou governança para essa
-transferência.
+possível transferência internacional de dados ao provedor Anthropic, cuja
+aplicabilidade depende da região de processamento contratada. O código não
+evidencia base legal, mecanismo contratual, finalidade, retenção ou governança
+para esse tratamento.
 
 Nenhuma etapa da API ou do scoring persiste a solicitação, o prompt, o modelo,
 as versões, o resultado ou a decisão do recrutador. Não existe log de
@@ -208,7 +209,7 @@ monitoramento, mas o endpoint de scoring não pode ser tratado como público.
 ### Impacto no Negócio/Custos
 
 - Qualquer pessoa com acesso à rede pode submeter PII de terceiros e consumir a
-  chave da OpenAI, causando vazamento e abuso financeiro.
+  chave da Anthropic, causando vazamento e abuso financeiro.
 - Um cliente pode acessar ou inferir dados de outro se a persistência for
   adicionada sem isolamento desde o início.
 - Ausência de rate limit facilita negação de serviço, automação abusiva e
@@ -235,8 +236,8 @@ monitoramento, mas o endpoint de scoring não pode ser tratado como público.
 
 ### Descrição do Problema
 
-`_get_client` lê `OPENAI_API_KEY` diretamente de `os.environ` e a entrega ao
-cliente da OpenAI. O próprio código reconhece que não há cofre de segredos,
+`_get_client` lê `ANTHROPIC_API_KEY` diretamente de `os.environ` e a entrega ao
+cliente da Anthropic. O próprio código reconhece que não há cofre de segredos,
 rotação ou validação adequada. A mensagem de erro orienta a criação de um
 `.env`, o que é aceitável apenas como conveniência local e não como mecanismo
 de produção.
@@ -248,8 +249,8 @@ ficaria atrás de uma superfície de abuso ampla.
 
 ### Impacto no Negócio/Custos
 
-- Vazamento da chave permite chamadas indevidas, aumento imediato da fatura e
-  possível acesso a outros recursos vinculados à conta do provedor.
+- Vazamento da chave da Anthropic permite chamadas indevidas, aumento imediato
+  da fatura e possível acesso a outros recursos vinculados à conta do provedor.
 - Revogar manualmente uma credencial compartilhada interrompe ambientes e
   dificulta identificar a origem do abuso.
 - Segredos em `.env`, logs, dumps ou pipelines podem persistir fora do controle

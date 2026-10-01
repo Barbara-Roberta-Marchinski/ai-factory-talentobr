@@ -48,7 +48,7 @@ Currículos podem conter, de forma indireta, dados pessoais sensíveis (origem r
 - **TODO — Viés geográfico:** CEP, cidade, estado de formação são proxies fortes para classe social. Política de mascaramento?
 - **TODO — Auditabilidade:** formato, retenção e acesso ao log de decisões. Quem pode consultar? Por quanto tempo guardamos?
 - **TODO — Direito à revisão:** desenho operacional do fluxo Art. 20. Botão na UI do recrutador? Canal externo para candidato?
-- **TODO — Transferência internacional:** uso de OpenAI implica transferência para EUA. Avaliar base legal (Art. 33 LGPD), cláusulas-padrão, ou migração para provedor com data residency BR.
+- **TODO — Transferência internacional:** o uso da API da Anthropic pode envolver transferência internacional; confirmar regiões de processamento e retenção contratadas. Avaliar base legal (Art. 33 LGPD), cláusulas-padrão ou alternativa com data residency BR.
 - **TODO — Comunicação ao candidato:** o candidato sabe que seu CV está sendo pontuado por IA? Onde isso aparece?
 
 ## 5. Governança

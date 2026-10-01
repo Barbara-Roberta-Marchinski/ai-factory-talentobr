@@ -52,13 +52,12 @@ score_final = 0.4 * score_heuristico + 0.6 * score_llm
 
 - **score_heuristico**: overlap entre as skills do CV e as `skills_obrigatorias`
   da vaga. Determinístico, simples (e ingênuo — ver dívida).
-- **score_llm**: um GPT pequeno dá uma nota 0-100 + uma justificativa curta.
+- **score_llm**: um modelo Claude Haiku dá uma nota 0-100 + uma justificativa curta.
   A justificativa é **post-hoc** (gerada depois pelo modelo) — não é explicação
   fiel, não trate como laudo.
 
-Provedor: **OpenAI, um GPT pequeno** (trocamos de um GPT grande pra cortar ~10x de
-custo). Dá pra trocar pro **Anthropic, um modelo Claude pequeno** — ver comentário em
-`src/scoring.py` (`_chamar_llm`).
+Provedor: **Anthropic, modelo Claude Haiku** (`claude-3-haiku-20240307`).
+O scoring usa a API Messages do SDK oficial `anthropic`.
 
 ---
 
@@ -78,13 +77,13 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**2. Chave da OpenAI** (só pra rodar app/ui de verdade — os testes NÃO precisam)
+**2. Chave da Anthropic** (só pra rodar app/ui de verdade — os testes NÃO precisam)
 
 ```bash
-cp .env.example .env   # depois edite o .env e coloque sua OPENAI_API_KEY
+cp .env.example .env   # depois edite o .env e coloque sua ANTHROPIC_API_KEY
 ```
 
-> O código carrega a chave de `os.environ`. Se você usa `.env`, exporte as
+> O código carrega `ANTHROPIC_API_KEY` de `os.environ`. Se você usa `.env`, exporte as
 > variáveis antes (ex.: `python-dotenv`, ou rode com a var no ambiente). Sim,
 > isso podia ser mais redondo — é dívida (ver abaixo).
 
@@ -115,7 +114,7 @@ curl -X POST http://localhost:8000/score \
 ## Testes
 
 Rodam **offline**: as chamadas de LLM são mockadas (monkeypatch). Não precisa de
-`OPENAI_API_KEY` nem de internet.
+`ANTHROPIC_API_KEY` nem de internet.
 
 ```bash
 pip install -r requirements.txt
@@ -150,13 +149,13 @@ entender o porquê.
 4. **Sem cache.** Reenviou o mesmo CV? Paga o LLM de novo, toda vez. Nada de
    memoização, nada de dedupe. Em 10k CVs/mês isso vira custo e latência.
    (`src/scoring.py`)
-5. **Segredos lidos crus.** `OPENAI_API_KEY` sai direto de `os.environ`, sem
+5. **Segredos lidos crus.** `ANTHROPIC_API_KEY` sai direto de `os.environ`, sem
    cofre, sem rotação, sem validação decente. (`src/scoring.py`, `.env.example`)
 6. **Sem observabilidade / sem deploy.** Sem logs estruturados, sem métricas de
    latência/custo/erro, sem alarme de orçamento (o teto é US$ 250/mês p/ 10k
    CVs), sem pipeline de deploy. (tudo)
 7. **Dados pessoais tratados de forma solta.** O CV (PII: nome, e-mail,
-   telefone, trajetória) entra inteiro no prompt e vai pra OpenAI nos EUA
+   telefone, trajetória) entra inteiro no prompt e vai para o provedor Anthropic
    (transferência internacional, Art. 33). Sem mascaramento, sem base legal
    documentada, sem retenção definida. Heurística também é frágil: `parse_cv`
    ignora OCR (CV escaneado vira texto vazio em silêncio) e a heurística ignora

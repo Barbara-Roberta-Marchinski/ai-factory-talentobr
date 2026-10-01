@@ -15,9 +15,7 @@ OBS importantes (leia antes de confiar nisso):
 - O viés que a gente observou no notebook (mulher e 50+ pontuando menos,
   universidade de capital pontuando mais, currículo em inglês pontuando mais)
   CONTINUA AQUI. Não foi mitigado. Ver README -> "Dívida técnica herdada".
-- Provedor: OpenAI, um GPT pequeno (trocamos de um GPT grande pra cortar ~10x de custo).
-  Alternativa que cabe sem reescrever muito: Anthropic, um modelo Claude pequeno
-  (precisa instalar o SDK `anthropic` e adaptar `_chamar_llm`).
+- Provedor: Anthropic, modelo Claude Haiku (`claude-3-haiku-20240307`).
 
 TODO (quem pegar): versionar o prompt, medir custo real, e por favor escrever
 o mapa de viés antes de qualquer deploy.
@@ -27,8 +25,8 @@ import os
 import json
 from pathlib import Path
 
-# Modelo barato. Era um GPT grande no notebook, mas pra 10k CVs/mês não fecha o budget.
-MODEL = "gpt-5.4-mini"
+# Modelo pequeno para chamadas de extração e scoring.
+MODEL = "claude-3-haiku-20240307"
 
 # Pesos do blend. Hardcoded mesmo — TODO: virar config/env e justificar a escolha.
 PESO_HEURISTICA = 0.4
@@ -40,19 +38,19 @@ PESO_LLM = 0.6
 # ---------------------------------------------------------------------------
 
 def _get_client():
-    """Cria o client da OpenAI sob demanda.
+    """Cria o client da Anthropic sob demanda.
 
-    Lê a chave crua do ambiente. Sem fallback, sem cofre de segredos, sem nada.
-    Se não tiver OPENAI_API_KEY setada, estoura aqui mesmo (de propósito).
+    Lê a chave do ambiente. Se ANTHROPIC_API_KEY não estiver configurada,
+    falha explicitamente.
     """
-    from openai import OpenAI  # import tardio: testes offline não precisam do SDK
+    from anthropic import Anthropic  # import tardio: testes offline não precisam do SDK
 
-    api_key = os.environ.get("OPENAI_API_KEY")
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         raise RuntimeError(
-            "OPENAI_API_KEY não configurada. Crie um .env (veja .env.example)."
+            "ANTHROPIC_API_KEY não configurada. Configure a chave no ambiente."
         )
-    return OpenAI(api_key=api_key)
+    return Anthropic(api_key=api_key)
 
 
 def _chamar_llm(prompt: str) -> dict:
@@ -62,13 +60,16 @@ def _chamar_llm(prompt: str) -> dict:
     função, então nenhuma chamada de rede acontece offline.
     """
     client = _get_client()
-    resp = client.chat.completions.create(
+    resp = client.messages.create(
         model=MODEL,
-        messages=[{"role": "user", "content": prompt}],
+        max_tokens=4096,
         temperature=0,
-        response_format={"type": "json_object"},
+        messages=[{"role": "user", "content": prompt}],
     )
-    return json.loads(resp.choices[0].message.content)
+    texto = "".join(bloco.text for bloco in resp.content if bloco.type == "text")
+    if not texto:
+        raise ValueError("A API da Anthropic retornou uma resposta sem texto.")
+    return json.loads(texto)
 
 
 # ---------------------------------------------------------------------------

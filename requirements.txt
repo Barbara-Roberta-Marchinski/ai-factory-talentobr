@@ -8,9 +8,7 @@ streamlit==1.41.1
 requests==2.32.3
 
 # --- LLM ---
-openai==1.59.2
-# Alternativa mencionada nos comentários (Anthropic, um modelo Claude pequeno):
-# anthropic==0.42.0   # descomente se for trocar de provedor em src/scoring.py
+anthropic==0.42.0
 
 # --- Parsing ---
 pypdf==5.1.0

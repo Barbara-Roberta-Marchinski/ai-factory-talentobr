@@ -32,7 +32,7 @@ Quais dados pessoais aparecem em CVs? Quais são sensíveis (Art. 5º, II)? Base
 
 ## 8. Transferência internacional
 
-OpenAI processa nos EUA. Implicações do Art. 33 LGPD. Avaliar: cláusulas contratuais padrão, alternativa com data residency BR, ou consentimento específico.
+O uso da API da Anthropic pode envolver transferência internacional; confirmar regiões de processamento e retenção contratadas. Implicações do Art. 33 LGPD. Avaliar: cláusulas contratuais padrão, alternativa com data residency BR, ou consentimento específico.
 
 ## 9. Pitch para o Comitê de Ética
 
