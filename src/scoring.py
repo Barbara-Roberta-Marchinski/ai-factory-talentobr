@@ -3,9 +3,10 @@
 import os
 import json
 from pathlib import Path
+from anthropic import Anthropic
 
 # Modelo pequeno para chamadas de extração e scoring.
-MODEL = "claude-3-5-haiku-20241022"
+MODEL = "claude-3-5-sonnet-20241022"
 
 # Pesos do blend. Hardcoded mesmo — TODO: virar config/env e justificar a escolha.
 PESO_HEURISTICA = 0.4
@@ -22,7 +23,7 @@ def _get_client():
     Lê a chave do ambiente. Se ANTHROPIC_API_KEY não estiver configurada,
     falha explicitamente.
     """
-    from anthropic import Anthropic  # import tardio: testes offline não precisam do SDK
+    
 
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:

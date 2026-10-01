@@ -116,7 +116,7 @@ def test_chamar_llm_usa_anthropic_e_retorna_json(monkeypatch):
     resultado = scoring._chamar_llm("prompt de teste")
 
     assert chamada["api_key"] == "test-key"
-    assert chamada["request"]["model"] == "claude-3-haiku-20240307"
+    assert chamada["request"]["model"] == "claude-3-5-sonnet-20241022"
     assert chamada["request"]["max_tokens"] == 4096
     assert chamada["request"]["temperature"] == 0
     assert chamada["request"]["messages"] == [
