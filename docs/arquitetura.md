@@ -17,7 +17,8 @@ C4Context
 
     Rel(recrutador, talento_br, "Submete Vaga e CV, revisa score e registra decisão", "HTTPS")
     Rel(talento_br, anthropic, "Envia prompt com CV e Vaga; recebe JSON com score e justificativa", "API REST / HTTPS")
-
+```
+```mermaid
     C4Container
     title Diagrama de Container (Nível 2) - TalentoBR
 
@@ -34,3 +35,5 @@ C4Context
     Rel(recrutador, frontend, "Acessa a interface web", "HTTPS")
     Rel(frontend, api, "Envia payload (Vaga + CV)", "JSON via POST /score")
     Rel(api, anthropic, "Solicita inferência", "JSON via API REST")
+
+    ```
