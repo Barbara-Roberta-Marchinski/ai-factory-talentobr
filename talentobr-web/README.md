@@ -46,6 +46,28 @@ ser informadas separadas por vírgulas.
 Currículos em PDF são extraídos no navegador antes do envio. PDFs digitalizados
 sem camada de texto precisam de OCR, que ainda não está implementado.
 
+## Carregar informações da vaga
+
+Use o botão **Carregar vaga** para selecionar um arquivo `.txt`. A primeira
+linha não vazia preenche o título da vaga e as linhas seguintes preenchem a
+descrição. Para importar competências automaticamente, inclua uma seção
+`Competências obrigatórias`, `Skills obrigatórias` ou `Tecnologias obrigatórias`
+com uma lista separada por vírgulas, por exemplo:
+
+```text
+VAGA — Engenheiro de Dados
+
+Descrição da vaga...
+
+Competências obrigatórias
+Python, SQL, Airflow, PostgreSQL
+```
+
+Se o arquivo não tiver essa seção, título e descrição são carregados, mas as
+competências devem ser informadas manualmente no campo correspondente. O
+formato do arquivo de vaga existente em `data/vagas/` é aceito para título e
+descrição.
+
 ## Scripts
 
 ```powershell

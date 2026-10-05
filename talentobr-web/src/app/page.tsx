@@ -19,6 +19,65 @@ type ScoreResponse = {
   aviso: string;
 };
 
+type VacancyDetails = {
+  title: string;
+  description: string;
+  requiredSkills: string[];
+};
+
+function parseVacancyText(text: string): VacancyDetails {
+  const lines = text.split(/\r?\n/);
+  const titleLineIndex = lines.findIndex((line) => line.trim().length > 0);
+  if (titleLineIndex < 0) {
+    throw new Error("O arquivo da vaga está vazio.");
+  }
+
+  const title = lines[titleLineIndex]
+    .trim()
+    .replace(/^vaga\s*[—–:-]\s*/i, "");
+  if (!title) {
+    throw new Error("Não foi possível identificar o título da vaga.");
+  }
+
+  const skillHeadingIndex = lines.findIndex((line) =>
+    /^(compet[eê]ncias|skills|tecnologias)\s+obrigat[oó]rias\s*:?\s*$/i.test(
+      line.trim(),
+    ),
+  );
+  let requiredSkills: string[] = [];
+
+  if (skillHeadingIndex >= 0) {
+    const skillsLines: string[] = [];
+    for (const line of lines.slice(skillHeadingIndex + 1)) {
+      const trimmedLine = line.trim();
+      if (/^[-—_]{3,}$/.test(trimmedLine)) {
+        if (skillsLines.length > 0) break;
+        continue;
+      }
+      if (/^[\p{L}\s]+:$/u.test(trimmedLine)) {
+        break;
+      }
+      if (trimmedLine) {
+        skillsLines.push(trimmedLine.replace(/^[-*•]\s*/, ""));
+      }
+    }
+    requiredSkills = skillsLines
+      .join(",")
+      .split(/[,;|]/)
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+  }
+
+  return {
+    title,
+    description: lines
+      .filter((_, index) => index !== titleLineIndex)
+      .join("\n")
+      .trim(),
+    requiredSkills,
+  };
+}
+
 async function readPdf(file: File): Promise<string> {
   const pdfjs = await import("pdfjs-dist");
   pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -77,11 +136,44 @@ export default function Home() {
   );
   const [cvTexto, setCvTexto] = useState("");
   const [arquivoNome, setArquivoNome] = useState("");
+  const [vagaArquivoNome, setVagaArquivoNome] = useState("");
+  const [vagaError, setVagaError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isReadingFile, setIsReadingFile] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScoreResponse | null>(null);
   const [decisionMessage, setDecisionMessage] = useState<string | null>(null);
+
+  const handleVacancyFileChange = async (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+
+    setError(null);
+    setVagaError(null);
+    setVagaArquivoNome("");
+
+    try {
+      if (!file.name.toLowerCase().endsWith(".txt")) {
+        throw new Error("Selecione um arquivo de vaga no formato .txt.");
+      }
+
+      const text = await file.text();
+      const vacancy = parseVacancyText(text);
+      setVagaTitulo(vacancy.title);
+      setVagaDescricao(vacancy.description);
+      setVagaSkills(vacancy.requiredSkills.join(", "));
+      setVagaArquivoNome(file.name);
+    } catch (caughtError) {
+      setVagaError(
+        caughtError instanceof Error
+          ? `${file.name}: ${caughtError.message}`
+          : `Não foi possível ler ${file.name}.`,
+      );
+    }
+  };
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -232,6 +324,78 @@ export default function Home() {
 
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div>
+                <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+                  <label
+                    className="text-sm font-medium text-slate-700"
+                    htmlFor="vaga-titulo"
+                  >
+                    Informações da vaga
+                  </label>
+                  <label className="relative inline-flex cursor-pointer items-center gap-2 rounded-lg border border-blue-200 bg-white px-3.5 py-2 text-sm font-semibold text-blue-800 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
+                    <svg
+                      aria-hidden="true"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        d="M12 16V4m0 0L7 9m5-5 5 5M5 14v4a2 2 0 002 2h10a2 2 0 002-2v-4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.7"
+                      />
+                    </svg>
+                    {vagaArquivoNome ? "Trocar arquivo da vaga" : "Carregar vaga"}
+                    <input
+                      accept=".txt,text/plain"
+                      aria-label="Selecionar arquivo de informações da vaga"
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                      onChange={handleVacancyFileChange}
+                      type="file"
+                    />
+                  </label>
+                </div>
+                {vagaArquivoNome && (
+                  <div
+                    aria-live="polite"
+                    className="mb-3 flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-3.5 py-3 text-sm text-blue-950 shadow-sm"
+                    role="status"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      className="mt-0.5 h-5 w-5 shrink-0 text-blue-700"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        d="m5 12 4 4L19 6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                      />
+                    </svg>
+                    <div className="min-w-0">
+                      <p className="font-semibold">Informações da vaga carregadas</p>
+                      <p className="mt-0.5 break-all text-blue-800">
+                        {vagaArquivoNome}
+                        {vagaSkills.trim()
+                          ? ` · ${vagaSkills.split(",").filter((skill) => skill.trim()).length} competências identificadas`
+                          : " · informe as competências obrigatórias manualmente"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {vagaError && (
+                  <p
+                    aria-live="assertive"
+                    className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-3.5 py-2.5 text-sm text-blue-900"
+                    role="alert"
+                  >
+                    {vagaError}
+                  </p>
+                )}
                 <label
                   className="mb-1.5 block text-sm font-medium text-slate-700"
                   htmlFor="vaga-titulo"
@@ -241,7 +405,10 @@ export default function Home() {
                 <input
                   className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   id="vaga-titulo"
-                  onChange={(event) => setVagaTitulo(event.target.value)}
+                  onChange={(event) => {
+                    setVagaTitulo(event.target.value);
+                    setVagaArquivoNome("");
+                  }}
                   required
                   value={vagaTitulo}
                 />
@@ -257,7 +424,10 @@ export default function Home() {
                 <input
                   className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   id="vaga-skills"
-                  onChange={(event) => setVagaSkills(event.target.value)}
+                  onChange={(event) => {
+                    setVagaSkills(event.target.value);
+                    setVagaArquivoNome("");
+                  }}
                   placeholder="Ex.: Python, React, AWS"
                   value={vagaSkills}
                 />
@@ -277,7 +447,10 @@ export default function Home() {
                 <textarea
                   className="min-h-24 w-full resize-y rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   id="vaga-descricao"
-                  onChange={(event) => setVagaDescricao(event.target.value)}
+                  onChange={(event) => {
+                    setVagaDescricao(event.target.value);
+                    setVagaArquivoNome("");
+                  }}
                   placeholder="Responsabilidades, contexto da equipe e outros requisitos..."
                   value={vagaDescricao}
                 />

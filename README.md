@@ -31,6 +31,12 @@ PDF com camada de texto são extraídos localmente no navegador; OCR ainda não
 está disponível. Consulte [`talentobr-web/README.md`](./talentobr-web/README.md)
 para configurar desenvolvimento e deploy no Render.
 
+Na interface, o botão **Carregar vaga** aceita arquivos TXT: a primeira linha
+preenche o título e o restante a descrição. Uma seção explícita
+`Competências obrigatórias`, `Skills obrigatórias` ou `Tecnologias obrigatórias`
+com itens separados por vírgula também preenche as skills da vaga; sem ela, as
+skills devem ser informadas manualmente.
+
 ## Pré-requisitos
 
 - Python 3.11 ou superior
