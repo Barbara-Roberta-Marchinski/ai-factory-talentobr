@@ -102,7 +102,7 @@ Ele é apenas um insumo para revisão humana e não deve ser usado como decisão
 automática de contratação.
 
 ## Evidência de Rollback
-Para garantir a resiliência do sistema e cumprir os requisitos de estabilidade, validamos o processo de rollback em produção. Abaixo está a evidência da restauração para uma versão anterior do deploy:[text](docs/Evidencia_Rollback.pdf)
+Para garantir a resiliência do sistema e cumprir os requisitos de estabilidade, validamos o processo de rollback em produção. Abaixo está a evidência da restauração para uma versão anterior do deploy:[text](docs/Evidencia_Rollback.pdf)![docs/Depois do Rollback.png](<Antes do Rollback.png>)
 
 
 ## ⚠️ Limitações Conhecidas e Dívida Técnica (Para a Etapa 2)
