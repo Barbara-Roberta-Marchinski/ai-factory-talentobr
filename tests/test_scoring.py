@@ -8,7 +8,6 @@ Cobre:
 """
 
 from pathlib import Path
-import sys
 from types import SimpleNamespace
 
 import pytest
@@ -87,7 +86,14 @@ def test_match_score_aplica_blend_0_4_0_6(monkeypatch):
     assert out["justificativa"] == "ok (mock)"
 
 
-def test_chamar_llm_usa_anthropic_e_retorna_json(monkeypatch):
+@pytest.mark.parametrize(
+    "resposta",
+    [
+        '{"score_llm": 82, "justificativa": "Boa aderência"}',
+        'Resultado da análise:\n```json\n{"score_llm": 82, "justificativa": "Boa aderência"}\n```',
+    ],
+)
+def test_chamar_llm_usa_anthropic_e_retorna_json(monkeypatch, resposta):
     chamada = {}
 
     class FakeAnthropic:
@@ -101,22 +107,18 @@ def test_chamar_llm_usa_anthropic_e_retorna_json(monkeypatch):
                 content=[
                     SimpleNamespace(
                         type="text",
-                        text='{"score_llm": 82, "justificativa": "Boa aderência"}',
+                        text=resposta,
                     )
                 ]
             )
 
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
-    monkeypatch.setitem(
-        sys.modules,
-        "anthropic",
-        SimpleNamespace(Anthropic=FakeAnthropic),
-    )
+    monkeypatch.setattr(scoring, "Anthropic", FakeAnthropic)
 
     resultado = scoring._chamar_llm("prompt de teste")
 
     assert chamada["api_key"] == "test-key"
-    assert chamada["request"]["model"] == "claude-3-5-sonnet-20241022"
+    assert chamada["request"]["model"] == "claude-haiku-4-5-20251001"
     assert chamada["request"]["max_tokens"] == 4096
     assert chamada["request"]["temperature"] == 0
     assert chamada["request"]["messages"] == [
@@ -125,17 +127,30 @@ def test_chamar_llm_usa_anthropic_e_retorna_json(monkeypatch):
     assert resultado == {"score_llm": 82, "justificativa": "Boa aderência"}
 
 
+def test_chamar_llm_falha_com_resposta_sem_json_valido(monkeypatch):
+    class FakeAnthropic:
+        def __init__(self, api_key):
+            self.messages = self
+
+        def create(self, **kwargs):
+            return SimpleNamespace(
+                content=[SimpleNamespace(type="text", text="Não foi possível analisar.")]
+            )
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setattr(scoring, "Anthropic", FakeAnthropic)
+
+    with pytest.raises(ValueError, match="não retornou um objeto JSON"):
+        scoring._chamar_llm("prompt de teste")
+
+
 def test_chamar_llm_falha_sem_chave_anthropic(monkeypatch):
     class FakeAnthropic:
         def __init__(self, api_key):
             raise AssertionError("O client não deve ser criado sem chave.")
 
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    monkeypatch.setitem(
-        sys.modules,
-        "anthropic",
-        SimpleNamespace(Anthropic=FakeAnthropic),
-    )
+    monkeypatch.setattr(scoring, "Anthropic", FakeAnthropic)
 
     with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
         scoring._chamar_llm("prompt de teste")

@@ -1,106 +1,46 @@
-# ADR-001: Adoção da Stack B para o TalentoBR
+# ADR-001: Evolução da Stack B (Migração para Next.js e Render)
 
 - **Status:** Aceita
-- **Data:** 14/09/2026
-- **Decisores:** Equipe de Produto, Engenharia e Dados
+- **Data:** Outubro de 2026
+- **Decisores:** Equipe de Engenharia e Produto (AI Factory)
 
 ## Contexto
 
-O TalentoBR é um produto de apoio à triagem de currículos. Embora o motor de
-scoring e a integração com LLM sejam componentes importantes, o valor
-operacional do produto acontece na interface utilizada pelo recrutador: upload
-do currículo, seleção da vaga, visualização do score e da justificativa,
-revisão humana e registro da decisão.
+O TalentoBR é um produto de apoio à triagem de currículos. O protótipo herdado da equipe de Data validou o motor de scoring (Heurística + LLM) utilizando uma API em FastAPI e uma interface básica em Streamlit.
 
-O protótipo atual já possui uma API em FastAPI e uma interface em Streamlit.
-Também precisamos de uma opção de deploy que permita validar rapidamente o
-fluxo com usuários, mantendo baixo esforço operacional e sem introduzir uma
-camada de frontend mais complexa antes da validação do produto.
+Embora o Streamlit tenha sido útil para a prototipagem rápida, a visão de produto exige uma interface "SaaS B2B profissional", com tratamento de estado complexo, feedback visual elegante (tratamento de erros da API da Anthropic sem quebrar a tela) e um dashboard de resultados responsivo. Além disso, precisamos de uma opção de deploy no *free tier* que minimize o impacto do *cold start* (tempo de despertar do servidor) para o usuário final.
 
-Foram consideradas alternativas com uma API e frontend web tradicional, como
-Next.js, bem como a manutenção de uma solução baseada apenas em notebook. A
-solução baseada em notebook não atende ao fluxo de trabalho do recrutador.
-Uma aplicação web tradicional oferece mais flexibilidade de longo prazo, mas
-tem custo e tempo de implementação maiores para a fase de validação.
-
-Esta decisão não elimina os riscos apontados na auditoria de segurança,
-privacidade, fairness, auditoria, autenticação, cache e observabilidade. A
-Stack B é uma decisão de composição tecnológica para o MVP; a entrada em
-produção continua condicionada à implementação desses controles.
+Esta decisão foca na evolução da camada de apresentação (Stack B2) e infraestrutura. Ela não elimina os riscos apontados na auditoria inicial (falta de autenticação, vazamento de PII para o LLM, ausência de banco de dados e viés não mitigado). A entrada em produção definitiva continua condicionada à implementação desses controles.
 
 ## Decisão
 
-Adotar a **Stack B**:
+Evoluir a arquitetura para uma **Stack B2 customizada**:
 
-- **Backend:** FastAPI, responsável pelos endpoints de scoring, validação de
-  contratos, integração com o motor de avaliação e futura aplicação das
-  políticas de autenticação, autorização, auditoria e isolamento por tenant.
-- **Interface web:** Streamlit, responsável pela experiência visual do
-  recrutador, incluindo entrada de dados, apresentação dos resultados e
-  interação de revisão humana.
-- **Deploy:** Hugging Face Spaces, como plataforma de disponibilização do MVP e
-  de validação com usuários, priorizando simplicidade de publicação e
-  integração com aplicações de IA.
+- **Backend (Mantido):** FastAPI. Preserva a lógica de inteligência artificial em Python, os endpoints de scoring e a integração com o motor de avaliação, além de centralizar as futuras políticas de autenticação e isolamento por tenant.
+- **Interface Web (Nova):** Next.js (React) + Tailwind CSS. O Streamlit foi descartado. O Next.js será configurado com `output: 'export'` para gerar um site 100% estático (Static Site Generation).
+- **Deploy (Novo):** Render. O backend rodará como um *Web Service* (sujeito a sleep mode no free tier), enquanto o frontend rodará como um *Static Site* (sem sleep mode, hospedagem global e gratuita).
 
-A interface visual do recrutador é o coração do sistema. Por isso, a escolha
-prioriza a velocidade para transformar o protótipo em um fluxo utilizável,
-testar a experiência de revisão humana e coletar feedback antes de investir em
-um frontend dedicado. FastAPI preserva uma separação clara entre interface e
-regras de negócio, permitindo substituir o Streamlit no futuro sem reescrever o
-motor de scoring.
-
-O deploy em Hugging Face Spaces deve ser tratado como ambiente de MVP,
-desenvolvimento e validação controlada. Dados reais, PII e tráfego externo
-somente poderão ser processados após a implementação dos controles de
-segurança, privacidade e governança definidos na auditoria.
+A interface visual do recrutador é o coração do sistema. A separação estrita entre um frontend React estático e uma API Python garante que o recrutador acesse a tela instantaneamente, mascarando qualquer lentidão do backend com componentes visuais de carregamento (*spinners*).
 
 ## Consequências
 
 ### Consequências positivas
 
-- Entrega rápida de uma experiência visual centrada no recrutador.
-- Baixa complexidade inicial para upload, formulários, resultados e ações de
-  revisão humana.
-- FastAPI fornece contratos HTTP claros e uma fronteira estável para o domínio,
-  facilitando testes e futura evolução da interface.
-- Reaproveitamento do código e dos conhecimentos já presentes no protótipo.
-- Hugging Face Spaces reduz o esforço inicial de infraestrutura e simplifica a
-  demonstração de um produto de IA.
-- A separação entre UI e backend permite evoluir a camada visual sem acoplar
-  diretamente a interface à lógica de scoring.
+- **Experiência de Usuário (UX):** Entrega de uma interface SaaS rica, em duas colunas, aderente aos padrões de mercado B2B.
+- **Performance de Frontend:** Como o site é estático e hospedado no Render, o carregamento inicial da página é instantâneo (zero *cold start* na interface).
+- **Desacoplamento Tecnológico:** FastAPI fornece contratos HTTP claros (JSON). O frontend React não conhece a lógica do LLM, apenas consome o serviço, facilitando testes e manutenção.
+- **Governança de Custos:** Ambas as pontas (API e Frontend) estão hospedadas na mesma plataforma (Render) com custo zero na fase de MVP.
 
 ### Consequências negativas e riscos
 
-- Streamlit não oferece, por padrão, os recursos de uma aplicação web
-  corporativa: autenticação robusta, autorização, multi-tenant, gestão de
-  sessão e componentes avançados precisarão ser implementados ou providos por
-  uma camada externa.
-- Hugging Face Spaces pode não atender requisitos de alta disponibilidade,
-  isolamento de dados, residência de dados, escalabilidade previsível e
-  controles corporativos de compliance. Esses requisitos devem ser validados
-  antes de produção.
-- Uma arquitetura inicial com UI e API no mesmo ambiente pode dificultar
-  escalabilidade independente, observabilidade e separação de blast radius.
-- Streamlit pode exigir retrabalho de frontend caso o produto precise de
-  workflows complexos, grande volume de usuários ou experiência altamente
-  customizada.
-- O deploy simples não resolve os riscos de PII enviada ao LLM, transferência
-  internacional, segredos, custo, cache ou viés algorítmico.
-- A dependência de uma plataforma externa cria risco de lock-in e exige um
-  plano de migração para infraestrutura sob controle da organização.
+- **Complexidade Operacional:** A equipe agora precisa manter e fazer o deploy de duas aplicações distintas (Node.js/React e Python/FastAPI), aumentando a carga cognitiva.
+- **Gestão de CORS:** Frontend e Backend rodam em origens diferentes, exigindo configuração estrita de `CORSMiddleware` na API para evitar bloqueios do navegador.
+- **Cold Start do Backend:** No free tier do Render, a API do FastAPI "dormirá" após 15 minutos. O primeiro currículo enviado no dia poderá levar até 50 segundos para ser processado enquanto a máquina acorda.
+- **Limitações do Static Export:** Ao exportar o Next.js estaticamente, perdemos recursos nativos de servidor do framework (como *Server Actions* e otimização de imagens dinâmica).
 
 ### Mitigações e critérios para evolução
 
-1. Manter o backend com contratos e regras de negócio independentes da camada
-   Streamlit.
-2. Adicionar autenticação, autorização por tenant, rate limiting, gestão de
-   segredos, logs estruturados, métricas e trilha de auditoria antes de
-   qualquer exposição a dados reais.
-3. Usar persistência externa protegida e não depender do filesystem efêmero do
-   ambiente de deploy para currículos ou registros de triagem.
-4. Definir limites de custo, cache, idempotência e alertas para chamadas ao
-   LLM.
-5. Reavaliar a Stack B quando houver requisitos de escala, disponibilidade,
-   compliance ou personalização que superem suas capacidades. Nesse momento,
-   FastAPI pode ser mantido como backend e a interface pode migrar para um
-   frontend dedicado.
+1. Configurar o `CORSMiddleware` no FastAPI liberando inicialmente origens locais e, posteriormente, travando apenas para a URL oficial do frontend no Render.
+2. Implementar estados de *loading* robustos na interface React para educar o usuário a aguardar o *cold start* da API sem abandonar a página.
+3. Adicionar persistência externa (ex: Supabase/PostgreSQL) e autenticação antes de qualquer exposição a dados reais de candidatos, para cumprir o Art. 20 da LGPD (trilha de auditoria).
+4. Migrar o backend para um plano pago (always-on) assim que o volume de uso do RH inviabilizar o tempo de espera do *sleep mode*.

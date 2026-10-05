@@ -1,56 +1,85 @@
----
-title: TalentoBR
-emoji: 🏢
-colorFrom: blue
-colorTo: indigo
-sdk: streamlit
-app_file: ui.py
-pinned: false
----
-
 # TalentoBR — CV Screener
 
-O **TalentoBR CV Screener** é um sistema de apoio à triagem de currículos, desenvolvido para auxiliar recrutadores na análise de aderência entre perfis de candidatos e requisitos de vagas. O produto é composto por uma API RESTful e uma interface de usuário interativa, automatizando a extração de dados e fornecendo um *score* híbrido de recomendação.
+Sistema de apoio à triagem de currículos composto por uma API FastAPI e uma
+interface web Next.js exportada como site estático.
 
-> ⚠️ **Status dos Dados:** Os currículos e informações presentes na pasta `data/` são estritamente **sintéticos** e gerados para fins de validação estrutural do sistema.
+> **Dados de demonstração:** currículos e vagas em `data/` são sintéticos.
+> Não use currículos reais antes de implementar e validar os controles de
+> privacidade, segurança, auditoria e conformidade descritos em `docs/`.
 
----
+## Arquitetura
 
-## Arquitetura e Estrutura
+- `app.py`: API FastAPI (`GET /health`, `POST /score`).
+- `src/scoring.py`: extração e avaliação com LLM mais score heurístico.
+- `talentobr-web/`: frontend Next.js + Tailwind, gerado como export estático
+  para hospedagem como Static Site no Render.
+- `tests/`: testes pytest da API e do scoring.
 
-O sistema é dividido em dois serviços principais: o motor de processamento (API FastAPI) e a interface do recrutador (UI Streamlit).
+O frontend envia o currículo e os dados da vaga diretamente à API. Currículos
+PDF com camada de texto são extraídos localmente no navegador; OCR ainda não
+está disponível. Consulte [`talentobr-web/README.md`](./talentobr-web/README.md)
+para configurar desenvolvimento e deploy no Render.
 
-*   `src/scoring.py`: Núcleo de regras de negócio, heurísticas de correspondência e orquestração de chamadas ao LLM.
-*   `app.py`: Backend em FastAPI que expõe o endpoint `POST /score`.
-*   `ui.py`: Frontend em Streamlit para interação do recrutador e revisão humana de resultados.
-*   `tests/`: Suíte de testes automatizados via `pytest`.
-*   `docs/`: Documentação oficial de governança, arquitetura e auditoria técnica.
+## Pré-requisitos
 
-## Lógica de Avaliação (Scoring)
+- Python 3.11 ou superior
+- Node.js 20 ou superior
 
-O algoritmo de recomendação do TalentoBR utiliza uma abordagem híbrida, combinando determinismo e análise semântica:
+## Executar localmente
 
-`Score Final = (0.4 * Score Heurístico) + (0.6 * Score LLM)`
+### API FastAPI
 
-1.  **Score Heurístico:** Cálculo determinístico baseado na sobreposição exata entre as habilidades extraídas do currículo e os requisitos obrigatórios da vaga.
-2.  **Score LLM:** Avaliação qualitativa gerada por inteligência artificial, que analisa o contexto da trajetória do candidato e devolve uma nota de 0 a 100 acompanhada de uma justificativa em texto.
+Na raiz do repositório:
 
-**Provedor de IA:** O sistema utiliza a API da Anthropic, empregando o modelo `claude-3-5-haiku-20241022` via Messages API para processamento rápido e eficiente[cite: 5].
-
-> **Nota de Conformidade (LGPD Art. 20):** O sistema atua estritamente como *apoio* à tomada de decisão. A interface garante o *Human-in-the-loop*, exigindo que o recrutador valide o score e tome a decisão final. A justificativa gerada pelo modelo é pós-hoc e não substitui o julgamento humano.
-
----
-
-## Como Executar o Projeto Localmente
-
-**Pré-requisitos:** Python 3.11 ou superior.
-
-**1. Configuração do Ambiente Virtual e Dependências**
-```bash
+```powershell
 python -m venv .venv
-# Ativação no Windows:
-.venv\Scripts\activate
-# Ativação no Linux/Mac:
-source .venv/bin/activate
-
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+Configure `ANTHROPIC_API_KEY` em `.env` e inicie a API:
+
+```powershell
+uvicorn app:app --reload
+```
+
+A API fica disponível em `http://localhost:8000`. A origem local do frontend,
+`http://localhost:3000`, é permitida por padrão; para outros domínios, configure
+`FRONTEND_ORIGINS` com as origens exatas separadas por vírgulas.
+
+### Frontend Next.js
+
+Em outro terminal:
+
+```powershell
+Set-Location talentobr-web
+npm ci
+Copy-Item .env.example .env.local
+npm run dev
+```
+
+O `.env.local` do frontend deve conter `NEXT_PUBLIC_API_BASE_URL`, por padrão
+`http://localhost:8000`. Acesse `http://localhost:3000`.
+
+## Testes e build estático
+
+```powershell
+# Na raiz: testes offline da API e do scoring
+.\.venv\Scripts\pytest.exe -q
+
+# Em talentobr-web: lint e export estático (gera talentobr-web/out/)
+npm run lint
+npm run build
+```
+
+No Render, publique `talentobr-web` como Static Site, com o comando de build
+`npm ci && npm run build` e diretório publicado `out`. Defina
+`NEXT_PUBLIC_API_BASE_URL` no serviço estático e `FRONTEND_ORIGINS` no serviço
+da API.
+
+## Scoring
+
+O score final combina a heurística de skills (40%) e a avaliação LLM (60%).
+Ele é apenas um insumo para revisão humana e não deve ser usado como decisão
+automática de contratação.

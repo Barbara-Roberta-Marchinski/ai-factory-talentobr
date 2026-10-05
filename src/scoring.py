@@ -1,12 +1,13 @@
-
+from dotenv import load_dotenv
+load_dotenv()
 
 import os
 import json
 from pathlib import Path
 from anthropic import Anthropic
 
-# Modelo pequeno para chamadas de extração e scoring.
-MODEL = "claude-3-5-sonnet-20241022"
+# Modelo usado para chamadas de extração e scoring.
+MODEL = "claude-haiku-4-5-20251001"
 
 # Pesos do blend. Hardcoded mesmo — TODO: virar config/env e justificar a escolha.
 PESO_HEURISTICA = 0.4
@@ -33,6 +34,24 @@ def _get_client():
     return Anthropic(api_key=api_key)
 
 
+def _parse_json_object(text: str) -> dict:
+    """Parseia o primeiro objeto JSON, mesmo com texto explicativo ao redor."""
+    start = text.find("{")
+    if start == -1:
+        raise ValueError("A API da Anthropic não retornou um objeto JSON.")
+
+    try:
+        result, _ = json.JSONDecoder().raw_decode(text, start)
+    except json.JSONDecodeError as error:
+        raise ValueError(
+            "A API da Anthropic retornou uma resposta que não contém JSON válido."
+        ) from error
+
+    if not isinstance(result, dict):
+        raise ValueError("A API da Anthropic não retornou um objeto JSON.")
+    return result
+
+
 def _chamar_llm(prompt: str) -> dict:
     """Faz uma chamada de chat pedindo JSON e devolve o dict já parseado.
 
@@ -49,7 +68,7 @@ def _chamar_llm(prompt: str) -> dict:
     texto = "".join(bloco.text for bloco in resp.content if bloco.type == "text")
     if not texto:
         raise ValueError("A API da Anthropic retornou uma resposta sem texto.")
-    return json.loads(texto)
+    return _parse_json_object(texto)
 
 
 # ---------------------------------------------------------------------------

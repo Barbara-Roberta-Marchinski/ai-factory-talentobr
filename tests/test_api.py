@@ -44,6 +44,33 @@ def test_health(client):
     assert r.json()["status"] == "ok"
 
 
+def test_score_endpoint_permite_preflight_da_origem_configurada(client):
+    response = client.options(
+        "/score",
+        headers={
+            "Origin": "http://localhost:3000",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+
+
+def test_score_endpoint_rejeita_preflight_de_origem_nao_configurada(client):
+    response = client.options(
+        "/score",
+        headers={
+            "Origin": "https://origem-nao-autorizada.example",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "access-control-allow-origin" not in response.headers
+
+
 def test_score_endpoint(client):
     payload = {
         "cv_texto": "qualquer texto de cv aqui",

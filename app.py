@@ -1,5 +1,10 @@
+import os
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from src.scoring import extrair_campos, match_score
@@ -8,6 +13,19 @@ app = FastAPI(
     title="TalentoBR CV Screener API",
     version="0.5",
     description="Protótipo de triagem de CVs. APOIO à decisão humana, não decisão automática (LGPD Art. 20).",
+)
+
+frontend_origins = [
+    origin.strip()
+    for origin in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000").split(",")
+    if origin.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=frontend_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 

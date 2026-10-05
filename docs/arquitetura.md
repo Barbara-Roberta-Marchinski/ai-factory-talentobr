@@ -21,11 +21,12 @@ C4Context
 ## Diagrama C4 Nível 2 (Containers)
 
 O diagrama de containers detalha a decomposição do Sistema TalentoBR em sua
-interface de uso e seu backend de scoring. O recrutador acessa a interface
-Streamlit via HTTPS. A interface envia os dados da triagem para a API FastAPI
-por REST, e a API coordena a extração e a avaliação com a API externa da
-Anthropic. O resultado retorna pela mesma cadeia até a interface, onde é
-apresentado para revisão humana.
+interface web estática e seu backend de scoring. O recrutador acessa a
+interface Next.js exportada como arquivos estáticos via HTTPS. A interface
+envia os dados da triagem diretamente para a API FastAPI por REST; a API
+coordena a extração e avaliação com a API externa da Anthropic. O resultado
+retorna pela mesma cadeia até a interface para revisão humana. A API deve
+permitir somente as origens web configuradas em `FRONTEND_ORIGINS`.
 
 ```mermaid
 C4Container
@@ -33,7 +34,7 @@ C4Container
 
     Person(recruiter, "Recrutador", "Submete currículos e vagas e revisa os resultados.")
     System_Boundary(talentobr, "Sistema TalentoBR") {
-        Container(web, "Interface Web (Streamlit)", "Streamlit", "Permite enviar currículos e vagas, visualizar scores e realizar a revisão humana.")
+        Container(web, "Interface Web", "Next.js + Tailwind (Static Export)", "Permite enviar currículos e vagas, visualizar scores e realizar a revisão humana.")
         Container(api, "API de Score (FastAPI)", "FastAPI", "Valida as requisições, executa o scoring e coordena as chamadas ao LLM.")
     }
     System_Ext(anthropic, "API da Anthropic", "Serviço externo de modelo de linguagem para extração e avaliação de currículos.")
