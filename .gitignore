@@ -25,6 +25,12 @@ ENV/
 .env.*.local
 *.key
 *.pem
+# Segredos e Ambientes
+.env
+.env.*
+!.env.example
+
+
 
 # IDE
 .vscode/

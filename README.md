@@ -94,3 +94,10 @@ da API.
 O score final combina a heurística de skills (40%) e a avaliação LLM (60%).
 Ele é apenas um insumo para revisão humana e não deve ser usado como decisão
 automática de contratação.
+
+## ⚠️ Limitações Conhecidas e Dívida Técnica (Para a Etapa 2)
+Este repositório encontra-se na **Fase 1 (Deploy Inicial)** e herdou algumas dívidas técnicas do protótipo v0.4 que serão sanadas na Fase 2:
+* **LGPD e Dados Pessoais:** O modelo atual não sanitiza PII (Identificadores Pessoais) antes de enviar ao LLM, o que configura transferência internacional de dados sem base legal formalizada.
+* **Auditoria (Art. 20 LGPD):** Atualmente, as triagens e avaliações do LLM não são persistidas em banco de dados, inviabilizando o direito à revisão humana e a rastreabilidade das decisões[cite: 12].
+* **Viés Algorítmico:** Testes preliminares do Data Team apontaram tendências de pontuação menor para perfis femininos, candidatos 50+ e regiões fora de capitais. Métricas de *fairness* serão implementadas antes de qualquer operação real[cite: 12].
+* **Aviso de Dados:** Todos os currículos na pasta `data/cvs-exemplos/` são **estritamente sintéticos** e gerados para fins de validação.
