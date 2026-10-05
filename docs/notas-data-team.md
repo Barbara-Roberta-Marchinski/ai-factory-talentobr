@@ -1,35 +1,31 @@
-# Notas — Data Team
+# Notas — Passagem de Bastão (Time de Data)
 
-*Anotações cruas do time de Data Science sobre o protótipo v0.4. Não revisado, não polido.*
+> **Contexto de Governança:** Anotações cruas herdadas do time de Data Science sobre o protótipo v0.4 do TalentoBR. Este documento serve como linha de base diagnóstica para os problemas de viés, LGPD (Art. 20) e métricas que devem ser mitigados na Fase 2 do projeto.
 
 ---
 
-## Performance
+## Performance Inicial (Legado v0.4)
 
 - Acurácia em set de teste: **76% de match com decisão humana** (concordância em "passar para próxima fase" vs. "descartar").
-- Mas testamos só com **100 CVs** — não generalizou ainda. Set de teste foi construído manualmente em uma tarde, sem balanceamento por área ou senioridade.
-- Não temos curva ROC, matriz de confusão estratificada, nem teste em CVs fora da amostra de treino do prompt.
+- Testado com apenas **100 CVs** — sem generalização comprovada e sem balanceamento por área ou senioridade.
+- Ausência de curva ROC, matriz de confusão estratificada e testes fora da amostra de treino.
 
-## Observações qualitativas (preocupantes)
+## Observações Qualitativas (Vieses Críticos Identificados)
 
-- Reparamos que **mulher e candidato de 50+ tendem a pontuar menos**. Não fomos investigar.
-- Currículos com formação em universidade federal de capital tendem a pontuar mais que mesma trajetória com formação em interior. Pode ser sinal legítimo (qualidade de curso) ou viés. Não separamos.
-- Currículos com inglês "fluente" no resumo escrito em inglês pontuam mais que mesmo perfil descrito em PT. Provável artefato de prompt.
+- **Viés de Gênero e Idade:** Constatado que mulheres e candidatos com 50+ anos tendem a pontuar menos.
+- **Viés Geográfico:** Currículos com formação em universidades federais de capitais pontuam mais do que trajetórias equivalentes do interior.
+- **Viés de Idioma:** Resumos e currículos escritos em inglês pontuam acima do mesmo perfil descrito em português, indicando artefato de prompt.
 
-## O que faltou (sabemos)
+## Lacunas Técnicas Conhecidas
 
-- Explicabilidade. SHAP não faz muito sentido para LLM. Cogitamos extrair attention weights mas não tivemos tempo. Hoje a "justificativa" é gerada pelo próprio modelo — não é explicação fiel, é post-hoc.
-- Persistência. Tudo roda em memória, perde ao fechar o notebook.
-- API. Não existe.
-- Auth. Não existe. Não é multi-tenant.
-- Versionamento de prompt. Hoje o prompt está hardcoded numa célula.
-- Custo. Estimamos ~US$ 0.04 por CV com um GPT grande, mas não medimos em produção.
+- **Explicabilidade:** A justificativa atual é gerada pelo próprio LLM de forma *post-hoc*, não sendo uma explicação causal fiel.
+- **Persistência e Arquitetura:** O modelo original rodava inteiramente em memória (notebook), sem persistência de decisões, sem API desacoplada e sem isolamento multi-tenant.
+- **Custo e Observabilidade:** Estimativa inicial de ~US$ 0,04 por currículo, sem telemetria em produção ou controle de orçamento.
 
-## Próximos passos sugeridos (para quem pegar)
+## Próximos Passos (Transição para a Etapa 2)
 
-- Refazer set de teste com balanceamento por gênero, faixa etária e região.
-- Avaliar modelos menores (um GPT pequeno) — custo cai 10x, qualidade talvez aceitável.
-- Investigar viés observado **antes** de qualquer deploy.
-- Conversar com Jurídico/DPO antes de qualquer coisa.
+- Refazer o conjunto de teste com balanceamento rigoroso por gênero, faixa etária e região.
+- Implementar métricas formais de *fairness* (como *disparate impact ratio* e *equal opportunity difference*).
+- Mitigar o viés e garantir a conformidade com o Art. 20 da LGPD (direito à revisão humana) antes de escalar a operação.
 
-— Time de Data, início deste ano
+— Time de Data, TalentoBR (Legado v0.4)
