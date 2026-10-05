@@ -101,6 +101,10 @@ O score final combina a heurística de skills (40%) e a avaliação LLM (60%).
 Ele é apenas um insumo para revisão humana e não deve ser usado como decisão
 automática de contratação.
 
+## Evidência de Rollback
+Para garantir a resiliência do sistema e cumprir os requisitos de estabilidade, validamos o processo de rollback em produção. Abaixo está a evidência da restauração para uma versão anterior do deploy:[text](docs/Evidencia_Rollback.pdf)
+
+
 ## ⚠️ Limitações Conhecidas e Dívida Técnica (Para a Etapa 2)
 Este repositório encontra-se na **Fase 1 (Deploy Inicial)** e herdou algumas dívidas técnicas do protótipo v0.4 que serão sanadas na Fase 2:
 * **LGPD e Dados Pessoais:** O modelo atual não sanitiza PII (Identificadores Pessoais) antes de enviar ao LLM, o que configura transferência internacional de dados sem base legal formalizada.
