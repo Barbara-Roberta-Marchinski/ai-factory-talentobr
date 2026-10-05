@@ -7,6 +7,17 @@ interface web Next.js exportada como site estático.
 > Não use currículos reais antes de implementar e validar os controles de
 > privacidade, segurança, auditoria e conformidade descritos em `docs/`.
 
+## 🚀 Acesso ao Sistema:
+
+https://talentobr-web.onrender.com/
+
+## 🎯 Problema e Solução
+
+**O Problema:** O processo de recrutamento tradicional exige que a equipe de RH invista dezenas de horas na triagem manual de currículos, o que gera gargalos operacionais, atrasa o tempo de contratação e resulta em avaliações iniciais sem padronização.
+
+**A Solução:** O TalentoBR reduz o tempo gasto pelo RH na triagem manual, padronizando a avaliação inicial. O sistema automatiza a leitura e a extração de dados, gerando um *score* de aderência da vaga (híbrido entre heurística e LLM). Ele não substitui o recrutador, mas atua como uma ferramenta de apoio para que a equipe foque seu tempo na revisão humana qualificada.
+
+
 ## Arquitetura
 
 - `app.py`: API FastAPI (`GET /health`, `POST /score`).
