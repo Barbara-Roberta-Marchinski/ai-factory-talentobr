@@ -1,0 +1,50 @@
+name: Pipeline CI/CD - TalentoBR
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  smoke-tests:
+    name: Executar Smoke Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Baixar o código
+        uses: actions/checkout@v4
+
+      # --- SMOKE TEST 1: BACKEND (PYTHON) ---
+      - name: 🐍 Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🧪 Smoke Test 1 - Pytest (Backend)
+        run: |
+          pip install -r requirements.txt
+          pytest -q
+        env:
+          # Variável dummy para passar nos testes offline se necessário
+          OPENAI_API_KEY: "dummy-key-para-testes"
+          ANTHROPIC_API_KEY: "dummy-key-para-testes"
+
+      # --- SMOKE TEST 2 & 3: FRONTEND (NODE.JS) ---
+      - name: 🟢 Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🧹 Smoke Test 2 - Linting (Frontend)
+        run: |
+          cd talentobr-web
+          npm ci
+          npm run lint
+
+      - name: 🏗️ Smoke Test 3 - Build Estático (Frontend)
+        run: |
+          cd talentobr-web
+          npm run build
+        env:
+          # Variável exigida durante o build do Next.js
+          NEXT_PUBLIC_API_BASE_URL: "http://localhost:8000"
