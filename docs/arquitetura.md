@@ -36,4 +36,4 @@ C4Context
     Rel(frontend, api, "Envia payload (Vaga + CV)", "JSON via POST /score")
     Rel(api, anthropic, "Solicita inferência", "JSON via API REST")
 
-    ```
+```
