@@ -1,45 +1,36 @@
-# Arquitetura do TalentoBR
+# Diagrama de Arquitetura C4 — TalentoBR
 
-Este documento apresenta o contexto de alto nível do protótipo TalentoBR
-seguindo o modelo C4 Nível 1 (Diagrama de Contexto). O recrutador utiliza o
-sistema para submeter currículos e vagas, consultar a avaliação e realizar a
-revisão humana. O Sistema TalentoBR usa a API da Anthropic para as etapas de
-extração e avaliação assistidas por LLM.
+Abaixo estão os diagramas arquiteturais do sistema TalentoBR, mapeando a evolução do protótipo herdado para a arquitetura SaaS baseada na Stack B2.
+
+## Nível 1: Contexto
+Mapeia a visão macro do sistema, demonstrando como o usuário interage com a plataforma e quais sistemas externos são consumidos.
 
 ```mermaid
 C4Context
-    title Diagrama de Contexto - Sistema TalentoBR
+    title Diagrama de Contexto (Nível 1) - TalentoBR
 
-    Person(recruiter, "Recrutador", "Envia currículos e vagas, consulta scores e justificativas e realiza a decisão humana.")
-    System(talentobr, "Sistema TalentoBR", "Aplicação de apoio à triagem de currículos, com interface web e API de scoring.")
-    System_Ext(anthropic, "API da Anthropic", "Serviço externo de modelo de linguagem usado para extração e avaliação de currículos.")
+    Person(recrutador, "Recrutador / RH", "Usuário final que submete o currículo e a vaga para análise.")
+    
+    System(talento_br, "TalentoBR (CV Screener)", "Plataforma SaaS que calcula o score de aderência do candidato usando heurística e Inteligência Artificial.")
+    
+    System_Ext(anthropic, "Anthropic API", "Provedor do LLM (Claude) responsável por gerar o score qualitativo e a justificativa.")
 
-    Rel(recruiter, talentobr, "Submete currículos e vagas; revisa resultados")
-    Rel(talentobr, anthropic, "Envia solicitações de extração e scoring")
-```
+    Rel(recrutador, talento_br, "Submete Vaga e CV, revisa score e registra decisão", "HTTPS")
+    Rel(talento_br, anthropic, "Envia prompt com CV e Vaga; recebe JSON com score e justificativa", "API REST / HTTPS")
 
-## Diagrama C4 Nível 2 (Containers)
+    C4Container
+    title Diagrama de Container (Nível 2) - TalentoBR
 
-O diagrama de containers detalha a decomposição do Sistema TalentoBR em sua
-interface web estática e seu backend de scoring. O recrutador acessa a
-interface Next.js exportada como arquivos estáticos via HTTPS. A interface
-envia os dados da triagem diretamente para a API FastAPI por REST; a API
-coordena a extração e avaliação com a API externa da Anthropic. O resultado
-retorna pela mesma cadeia até a interface para revisão humana. A API deve
-permitir somente as origens web configuradas em `FRONTEND_ORIGINS`.
+    Person(recrutador, "Recrutador / RH", "Usuário final (Desktop ou Mobile).")
 
-```mermaid
-C4Container
-    title Diagrama de Containers - Sistema TalentoBR
-
-    Person(recruiter, "Recrutador", "Submete currículos e vagas e revisa os resultados.")
-    System_Boundary(talentobr, "Sistema TalentoBR") {
-        Container(web, "Interface Web", "Next.js + Tailwind (Static Export)", "Permite enviar currículos e vagas, visualizar scores e realizar a revisão humana.")
-        Container(api, "API de Score (FastAPI)", "FastAPI", "Valida as requisições, executa o scoring e coordena as chamadas ao LLM.")
+    System_Boundary(talento_br_boundary, "TalentoBR") {
+        Container(frontend, "Frontend Web (Static Site)", "Next.js, React, Tailwind CSS", "Interface B2B que coleta os dados e exibe o dashboard de resultados. Hospedado no Render.")
+        
+        Container(api, "API de Scoring (Web Service)", "Python, FastAPI", "Orquestra a lógica de negócio, executa a heurística (match de skills) e monta o prompt. Hospedada no Render.")
     }
-    System_Ext(anthropic, "API da Anthropic", "Serviço externo de modelo de linguagem para extração e avaliação de currículos.")
 
-    Rel(recruiter, web, "Acessa a interface e revisa resultados", "HTTPS")
-    Rel(web, api, "Envia currículos e vagas e recebe scores", "REST/HTTPS")
-    Rel(api, anthropic, "Solicita extração e avaliação", "HTTPS/API")
-```
+    System_Ext(anthropic, "Anthropic API", "Modelo Claude Haiku")
+
+    Rel(recrutador, frontend, "Acessa a interface web", "HTTPS")
+    Rel(frontend, api, "Envia payload (Vaga + CV)", "JSON via POST /score")
+    Rel(api, anthropic, "Solicita inferência", "JSON via API REST")
