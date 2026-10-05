@@ -1,5 +1,12 @@
 # Changelog
 
+## [v1.0.0] (Outubro de 2026 — Deploy Inicial na Nuvem e Governança)
+- **Deploy Automatizado:** Configuração de pipeline CI/CD via GitHub Actions para publicação contínua da API e do Frontend no Render.
+- **Governança e Arquitetura:** Inclusão de diagramas C4 (Níveis 1 e 2) e registros de decisão arquitetural (ADR-001 para escolha da Stack B2 e ADR-002 justificando o Render frente a alternativas como Hugging Face Spaces e Vercel).
+- **Infraestrutura:** Separação de ambientes de desenvolvimento e produção com injeção segura de variáveis de ambiente (`NEXT_PUBLIC_API_BASE_URL` e `FRONTEND_ORIGINS`).
+- **Documentação:** Atualização do `README.md` com a URL pública oficial de produção, contexto de negócio (problema/solução) e orientações de execução.
+- **Resiliência:** Criação do documento de Post-mortem detalhando a resolução de incidente de bloqueio de CORS na primeira tentativa de integração em produção.
+
 ## [v0.6] (Outubro de 2026 — migração para frontend web)
 - Migração da interface Streamlit para Next.js + React + Tailwind em
   `talentobr-web/`, configurado com export estático para hospedagem como
