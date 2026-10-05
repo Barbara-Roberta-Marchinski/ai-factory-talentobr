@@ -2,9 +2,11 @@
 
 Este documento resume o escopo das 12 semanas para quem está pegando o projeto. Não é uma lista exaustiva — é um mapa do território.
 
+**Status:** Fase 1 (Deploy e Estruturação) concluída. O projeto avança para a Fase 2 (LGPD, Sanitização de PII e Governança).
+
 ## 1. Transformar notebook em sistema usável
 
-O artefato atual é um `.ipynb`. Recrutador não abre Jupyter. Precisamos de **API + UI** (sugestão: FastAPI + Streamlit como MVP, ou Next.js se houver banda). Recrutador faz upload de CV(s) e vaga, vê score, justificativa e decide.
+- [x] Concluído na Etapa 1: API FastAPI e frontend Next.js estão em produção no Render. A interface tem URL pública: https://talentobr-web.onrender.com/. O recrutador pode enviar currículo e vaga, consultar score e justificativa e registrar sua decisão na interface.
 
 ## 2. Persistência de decisões
 
@@ -40,7 +42,7 @@ Apresentação final: o que foi construído, como o viés é monitorado, como o 
 
 ## 10. Deploy + observabilidade + custo
 
-URL pública multi-tenant. Logs estruturados. Métricas de latência, custo por triagem, taxa de erro. Alarme se custo mensal exceder US$ 250 para 10k triagens.
+- [x] Deploy automatizado via GitHub Actions, com acionamento do deploy no Render a cada push em `main`, e URL pública funcional: https://talentobr-web.onrender.com/. Observabilidade, métricas de latência/custo/taxa de erro, alertas de orçamento e suporte multi-tenant continuam pendentes.
 
 ---
 
