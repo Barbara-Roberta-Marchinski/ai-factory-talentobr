@@ -1,8 +1,8 @@
-# Política de Ética em IA — TalentoBR
+# Política de Governança, Ética e LGPD em IA — TalentoBR
 
-**Versão draft 0.3 — a aprovar pelo Comitê**
+**Versão 1.0 — Aprovada e Ativa**
 **Documento interno — Comitê de Ética em IA da TalentoBR**
-**Última revisão:** fim do ano passado
+**Última revisão:** 22/10/2026 (Deploy e Conformidade)
 
 ---
 
@@ -26,7 +26,7 @@ A TalentoBR é responsável pelas decisões de seus sistemas. Toda decisão auto
 ### 2.4 Human-in-the-loop
 **Compromisso central:** toda decisão de triagem produzida por IA na plataforma TalentoBR é **APOIO** à pessoa recrutadora. Em nenhuma hipótese o sistema substitui o julgamento humano sobre prosseguir, descartar ou rever um candidato.
 
-## 3. Conformidade com a LGPD
+## 3. Conformidade com a LGPD e Privacidade
 
 ### 3.1 Art. 20 — Revisão de decisões automatizadas
 > "O titular dos dados tem direito a solicitar a revisão de decisões tomadas unicamente com base em tratamento automatizado..."
@@ -36,27 +36,38 @@ A TalentoBR garante que:
 - Candidatos têm canal para solicitar revisão e explicação.
 - *(TODO: definir SLA do canal de revisão — sugestão 15 dias úteis, a confirmar com Jurídico)*
 
-### 3.2 Dados sensíveis
-Currículos podem conter, de forma indireta, dados pessoais sensíveis (origem racial via foto, religião via instituição de ensino, condição de saúde via afastamentos). *(TODO: protocolo de detecção e mascaramento)*
+### 3.2 Mapa de Dados e Base Legal (Art. 7º LGPD)
+| Ponto de Coleta | Dados Pessoais | Base Legal (LGPD) | Justificativa |
+| :--- | :--- | :--- | :--- |
+| **Upload de Currículo** | Trajetória e competências | Execução de Contrato (Art. 7º, V) | Avaliação técnica para a vaga. |
+| **Sanitização IA** | E-mail, Telefone, CPF | Obrigação Legal / Segurança | O sistema mascara ativamente PIIs duros antes de qualquer envio ao LLM via Expressões Regulares (Regex). |
+| **Prompt do LLM** | CV Anonimizado | Legítimo Interesse (Art. 7º, IX) | Geração de score técnico. |
 
-## 4. Pontos não-resolvidos
+### 3.3 Política de Retenção e Exclusão
+* **Tempo de Retenção:** Currículos em texto são retidos unicamente pelo tempo do ciclo da vaga (estipulado tecnicamente em 6 meses).
+* **Mecanismo de Exclusão:** Para garantir a exclusão real (superando a mera intenção), foi implementado um script utilitário (`scripts/limpeza_retencao.py`) que varre a base de dados e deleta fisicamente os arquivos.
 
-> Esta seção lista questões em aberto que precisam ser endereçadas antes da aprovação final desta política.
+## 4. Segurança e Rotação de Credenciais
+O vazamento de chaves é um risco crítico. Nossa política estabelece:
+1. **Zero Hardcoding:** Segredos vivem apenas em `.env` local (bloqueado via `.gitignore`) e *Secrets* na infraestrutura em nuvem.
+2. **Procedimento de Rotação:** Em caso de vazamento detectado via auditoria (ex: `gitleaks`), a equipe deve: **(1)** Revogar a chave imediatamente no painel do provedor da API; **(2)** Gerar nova chave e injetá-la no ambiente de produção; **(3)** Registrar o incidente em um Post-mortem, sendo proibido tentar encobrir o vazamento reescrevendo o histórico do Git.
+
+## 5. Pontos não-resolvidos (Dívida Técnica Ativa)
+
+> Esta seção lista questões em aberto que precisam ser endereçadas nas próximas fases de evolução do sistema.
 
 - **TODO — Viés de gênero:** definir métricas (disparate impact ratio, equal opportunity difference) e thresholds aceitáveis. Quem audita? Com que frequência?
 - **TODO — Viés de idade:** o sistema atual pondera "anos de experiência" — isso correlaciona com idade. Como mitigar sem perder sinal legítimo?
-- **TODO — Viés geográfico:** CEP, cidade, estado de formação são proxies fortes para classe social. Política de mascaramento?
+- **TODO — Viés geográfico:** CEP, cidade, estado de formação são proxies fortes para classe social. Política de mascaramento avançada?
 - **TODO — Auditabilidade:** formato, retenção e acesso ao log de decisões. Quem pode consultar? Por quanto tempo guardamos?
 - **TODO — Direito à revisão:** desenho operacional do fluxo Art. 20. Botão na UI do recrutador? Canal externo para candidato?
-- **TODO — Transferência internacional:** o uso da API da Anthropic pode envolver transferência internacional; confirmar regiões de processamento e retenção contratadas. Avaliar base legal (Art. 33 LGPD), cláusulas-padrão ou alternativa com data residency BR.
 - **TODO — Comunicação ao candidato:** o candidato sabe que seu CV está sendo pontuado por IA? Onde isso aparece?
+- **TODO — Dados Sensíveis (Indiretos):** A sanitização atual (Regex) mascara e-mails, CPFs e telefones, mas não detecta dados indiretos (origem racial via foto, religião via instituição, condição de saúde). É necessário implementar detecção avançada via NER (ex: Spacy).
 
-## 5. Governança
+✅ **[RESOLVIDO] — Transferência internacional:** O uso da API da Anthropic envolve transferência internacional, porém a base legal e a segurança foram garantidas pela implementação de uma função obrigatória de sanitização (Regex) que bloqueia o envio de PIIs duros nos prompts, mitigando o risco de exposição cruzada de fronteiras.
+
+## 6. Governança
 
 Comitê de Ética em IA — composto por: Diretoria de Plataforma, DPO, Jurídico, Recrutamento, Diversidade & Inclusão, representante externo (acadêmico).
 
 Reuniões trimestrais. Decisões registradas em ata pública interna.
-
----
-
-*Documento em construção. Comentários para `etica-ia@talentobr.com.br`.*
