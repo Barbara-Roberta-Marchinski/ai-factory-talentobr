@@ -3,8 +3,38 @@ load_dotenv()
 
 import os
 import json
+import re
 from pathlib import Path
 from anthropic import Anthropic
+
+
+def sanitizar_pii(texto: str) -> str:
+    """Substitui dados de contato e identificadores comuns antes do uso externo."""
+    texto = re.sub(
+        r"(?i)\b(?:https?://)?(?:www\.)?(?:linkedin\.com|github\.com)/[^\s<>()]+",
+        "[LINK_REMOVIDO]",
+        texto,
+    )
+    texto = re.sub(
+        r"(?i)\b[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?"
+        r"(?:\.[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?)+\b",
+        "[EMAIL_REMOVIDO]",
+        texto,
+    )
+    texto = re.sub(
+        r"(?<!\d)(?:\d{3}\.?\d{3}\.?\d{3}-?\d{2})(?!\d)",
+        "[CPF_REMOVIDO]",
+        texto,
+    )
+    texto = re.sub(
+        r"(?<!\d)(?:\+?55[\s.-]*)?(?:\(?\d{2}\)?[\s.-]*)?"
+        r"(?:9\d{4}|\d{4})[\s.-]?\d{4}(?!\d)",
+        "[TELEFONE_REMOVIDO]",
+        texto,
+    )
+    return texto
+
+
 
 # Modelo usado para chamadas de extração e scoring.
 MODEL = "claude-haiku-4-5-20251001"
@@ -95,6 +125,7 @@ def extrair_campos(texto: str) -> dict:
     anos_experiencia_total. É esta função (via `_chamar_llm`) que os testes
     mockam.
     """
+    texto_sanitizado = sanitizar_pii(texto)
     prompt = f"""Extraia do curriculo abaixo um JSON com os campos:
 - nome (string)
 - email (string)
@@ -106,7 +137,7 @@ def extrair_campos(texto: str) -> dict:
 Responda APENAS com o JSON, sem markdown.
 
 CURRICULO:
-{texto}
+{texto_sanitizado}
 """
     return _chamar_llm(prompt)
 
@@ -141,6 +172,9 @@ def avaliar_com_llm(cv_dict: dict, vaga_dict: dict) -> dict:
 
     Retorna {"score_llm": int, "justificativa": str}. Mockada nos testes.
     """
+    candidato_sanitizado = sanitizar_pii(
+        json.dumps(cv_dict, ensure_ascii=False, indent=2)
+    )
     prompt = f"""Voce e um recrutador experiente. Avalie o match entre o candidato e a vaga.
 Responda JSON com os campos: score_llm (0-100), justificativa (string curta em pt-BR).
 
@@ -148,7 +182,7 @@ VAGA:
 {json.dumps(vaga_dict, ensure_ascii=False, indent=2)}
 
 CANDIDATO:
-{json.dumps(cv_dict, ensure_ascii=False, indent=2)}
+{candidato_sanitizado}
 """
     out = _chamar_llm(prompt)
     return {
