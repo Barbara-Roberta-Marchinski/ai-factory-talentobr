@@ -1,5 +1,8 @@
 # TalentoBR — CV Screener
 
+[![Pipeline CI/CD - TalentoBR](https://github.com/Barbara-Roberta-Marchinski/ai-factory-talentobr/actions/workflows/ci.yml/badge.svg)](https://github.com/Barbara-Roberta-Marchinski/ai-factory-talentobr/actions/workflows/ci.yml)
+
+
 Sistema de apoio à triagem de currículos composto por uma API FastAPI e uma
 interface web Next.js exportada como site estático.
 
