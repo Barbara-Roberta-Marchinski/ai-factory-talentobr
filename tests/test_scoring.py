@@ -63,8 +63,69 @@ def test_parse_cv_le_arquivo_real_e_estrutura(monkeypatch):
     # asserts em ASCII de propósito (console Windows mangla acento) — prova
     # que o arquivo real foi lido e o texto chegou no prompt de extração.
     assert "FastAPI" in capturado["prompt"]
-    assert "joao.silva.exemplo@email-ficticio.com.br" in capturado["prompt"]
+    assert "joao.silva.exemplo@email-ficticio.com.br" not in capturado["prompt"]
+    assert "[EMAIL_REMOVIDO]" in capturado["prompt"]
     assert "FastAPI" in cv["skills"]
+
+
+def test_sanitizar_pii_substitui_email_telefone_cpf_e_links():
+    texto = (
+        "Email: pessoa@example.com; telefone: +55 (11) 98765-4321; "
+        "CPF: 123.456.789-00; LinkedIn: https://www.linkedin.com/in/pessoa; "
+        "GitHub: github.com/pessoa"
+    )
+
+    resultado = scoring.sanitizar_pii(texto)
+
+    assert "pessoa@example.com" not in resultado
+    assert "+55 (11) 98765-4321" not in resultado
+    assert "123.456.789-00" not in resultado
+    assert "linkedin.com/in/pessoa" not in resultado
+    assert "github.com/pessoa" not in resultado
+    assert resultado.count("[EMAIL_REMOVIDO]") == 1
+    assert resultado.count("[TELEFONE_REMOVIDO]") == 1
+    assert resultado.count("[CPF_REMOVIDO]") == 1
+    assert resultado.count("[LINK_REMOVIDO]") == 2
+
+
+@pytest.mark.parametrize(
+    "telefone",
+    [
+        "+55 (11) 98765-4321",
+        "11 98765-4321",
+        "98765-4321",
+        "3333-4444",
+    ],
+)
+def test_sanitizar_pii_substitui_telefone_com_ou_sem_ddd_e_ddi(telefone):
+    assert scoring.sanitizar_pii(f"Telefone: {telefone}") == (
+        "Telefone: [TELEFONE_REMOVIDO]"
+    )
+
+
+def test_avaliar_com_llm_sanitiza_pii_do_cv_estruturado(monkeypatch):
+    capturado = {}
+
+    def fake_chamar_llm(prompt: str) -> dict:
+        capturado["prompt"] = prompt
+        return {"score_llm": 80, "justificativa": "Boa aderência"}
+
+    monkeypatch.setattr(scoring, "_chamar_llm", fake_chamar_llm)
+
+    scoring.avaliar_com_llm(
+        {
+            "email": "pessoa@example.com",
+            "telefone": "(11) 98765-4321",
+            "cpf": "123.456.789-00",
+            "linkedin": "https://linkedin.com/in/pessoa",
+        },
+        VAGA,
+    )
+
+    assert "pessoa@example.com" not in capturado["prompt"]
+    assert "(11) 98765-4321" not in capturado["prompt"]
+    assert "123.456.789-00" not in capturado["prompt"]
+    assert "linkedin.com/in/pessoa" not in capturado["prompt"]
 
 
 def test_match_score_aplica_blend_0_4_0_6(monkeypatch):
