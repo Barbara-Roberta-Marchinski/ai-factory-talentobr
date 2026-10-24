@@ -46,11 +46,13 @@ A TalentoBR garante que:
 ### 3.3 Política de Retenção e Exclusão
 * **Tempo de Retenção:** Currículos em texto são retidos unicamente pelo tempo do ciclo da vaga (estipulado tecnicamente em 6 meses).
 * **Mecanismo de Exclusão:** Para garantir a exclusão real (superando a mera intenção), foi implementado um script utilitário (`scripts/limpeza_retencao.py`) que varre a base de dados e deleta fisicamente os arquivos.
+* **Backups e Snapshots:** Cópias de segurança do sistema de banco de dados e arquivos herdam rigorosamente a mesma política de retenção do dado principal, sendo destruídas de forma irreversível ao fim do ciclo de 6 meses.
 
 ## 4. Segurança e Rotação de Credenciais
 O vazamento de chaves é um risco crítico. Nossa política estabelece:
 1. **Zero Hardcoding:** Segredos vivem apenas em `.env` local (bloqueado via `.gitignore`) e *Secrets* na infraestrutura em nuvem.
 2. **Procedimento de Rotação:** Em caso de vazamento detectado via auditoria (ex: `gitleaks`), a equipe deve: **(1)** Revogar a chave imediatamente no painel do provedor da API; **(2)** Gerar nova chave e injetá-la no ambiente de produção; **(3)** Registrar o incidente em um Post-mortem, sendo proibido tentar encobrir o vazamento reescrevendo o histórico do Git.
+3. **Privacidade nos Logs:** É estritamente proibido o registro (log) de dados pessoais em claro. Qualquer necessidade de rastreabilidade de currículos no backend deve utilizar hash criptográfico ou IDs de referência.
 
 ## 5. Pontos não-resolvidos (Dívida Técnica Ativa)
 
@@ -71,3 +73,7 @@ O vazamento de chaves é um risco crítico. Nossa política estabelece:
 Comitê de Ética em IA — composto por: Diretoria de Plataforma, DPO, Jurídico, Recrutamento, Diversidade & Inclusão, representante externo (acadêmico).
 
 Reuniões trimestrais. Decisões registradas em ata pública interna.
+
+* **DPA (Data Processing Agreement):** A transferência de dados anonimizados para a Anthropic/OpenAI é regida e protegida pelo aceite do DPA padrão do provedor.
+
+* **Encarregado de Dados (DPO):** Bárbara atua como DPO e responsável pelas decisões de privacidade nesta fase da arquitetura.

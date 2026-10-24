@@ -3,9 +3,17 @@ load_dotenv()
 
 import os
 import json
+import hashlib
+import logging
 import re
 from pathlib import Path
 from anthropic import Anthropic
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 def sanitizar_pii(texto: str) -> str:
@@ -172,9 +180,11 @@ def avaliar_com_llm(cv_dict: dict, vaga_dict: dict) -> dict:
 
     Retorna {"score_llm": int, "justificativa": str}. Mockada nos testes.
     """
-    candidato_sanitizado = sanitizar_pii(
-        json.dumps(cv_dict, ensure_ascii=False, indent=2)
-    )
+    cv_texto = json.dumps(cv_dict, ensure_ascii=False, sort_keys=True)
+    cv_hash = hashlib.sha256(cv_texto.encode("utf-8")).hexdigest()[:8]
+    logger.info("Iniciando avaliação do currículo cv_hash=%s", cv_hash)
+
+    candidato_sanitizado = sanitizar_pii(cv_texto)
     prompt = f"""Voce e um recrutador experiente. Avalie o match entre o candidato e a vaga.
 Responda JSON com os campos: score_llm (0-100), justificativa (string curta em pt-BR).
 
@@ -184,7 +194,17 @@ VAGA:
 CANDIDATO:
 {candidato_sanitizado}
 """
-    out = _chamar_llm(prompt)
+    try:
+        out = _chamar_llm(prompt)
+    except Exception as error:
+        logger.error(
+            "Falha na avaliação do currículo cv_hash=%s tipo_erro=%s",
+            cv_hash,
+            type(error).__name__,
+        )
+        raise
+
+    logger.info("Avaliação concluída com sucesso cv_hash=%s", cv_hash)
     return {
         "score_llm": int(out.get("score_llm", 0)),
         "justificativa": out.get("justificativa", ""),

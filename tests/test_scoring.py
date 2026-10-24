@@ -128,6 +128,46 @@ def test_avaliar_com_llm_sanitiza_pii_do_cv_estruturado(monkeypatch):
     assert "linkedin.com/in/pessoa" not in capturado["prompt"]
 
 
+def test_avaliar_com_llm_registra_hash_sem_dados_pessoais(caplog, monkeypatch):
+    cv = {"nome": "Pessoa Confidencial", "email": "pessoa@example.com"}
+    cv_texto = scoring.json.dumps(cv, ensure_ascii=False, sort_keys=True)
+    cv_hash = scoring.hashlib.sha256(cv_texto.encode("utf-8")).hexdigest()[:8]
+    monkeypatch.setattr(
+        scoring,
+        "_chamar_llm",
+        lambda prompt: {"score_llm": 80, "justificativa": "Boa aderência"},
+    )
+
+    with caplog.at_level("INFO", logger=scoring.__name__):
+        scoring.avaliar_com_llm(cv, VAGA)
+
+    assert f"cv_hash={cv_hash}" in caplog.text
+    assert "Iniciando avaliação" in caplog.text
+    assert "concluída com sucesso" in caplog.text
+    assert "Pessoa Confidencial" not in caplog.text
+    assert "pessoa@example.com" not in caplog.text
+
+
+def test_avaliar_com_llm_registra_erro_sem_mensagem_potencialmente_sensivel(
+    caplog, monkeypatch
+):
+    cv = {"nome": "Pessoa Confidencial"}
+
+    def fail_with_sensitive_message(prompt):
+        raise RuntimeError("Falha para pessoa@example.com")
+
+    monkeypatch.setattr(scoring, "_chamar_llm", fail_with_sensitive_message)
+
+    with caplog.at_level("ERROR", logger=scoring.__name__):
+        with pytest.raises(RuntimeError, match="pessoa@example.com"):
+            scoring.avaliar_com_llm(cv, VAGA)
+
+    assert "Falha na avaliação" in caplog.text
+    assert "tipo_erro=RuntimeError" in caplog.text
+    assert "Pessoa Confidencial" not in caplog.text
+    assert "pessoa@example.com" not in caplog.text
+
+
 def test_match_score_aplica_blend_0_4_0_6(monkeypatch):
     # heurística: 4 de 5 -> 80 ; LLM (mock) -> 60
     # final = int(0.4*80 + 0.6*60) = int(32 + 36) = 68
