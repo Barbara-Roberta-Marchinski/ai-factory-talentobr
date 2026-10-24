@@ -73,7 +73,5 @@ O vazamento de chaves é um risco crítico. Nossa política estabelece:
 Comitê de Ética em IA — composto por: Diretoria de Plataforma, DPO, Jurídico, Recrutamento, Diversidade & Inclusão, representante externo (acadêmico).
 
 Reuniões trimestrais. Decisões registradas em ata pública interna.
-
 * **DPA (Data Processing Agreement):** A transferência de dados anonimizados para a Anthropic/OpenAI é regida e protegida pelo aceite do DPA padrão do provedor.
-
 * **Encarregado de Dados (DPO):** Bárbara atua como DPO e responsável pelas decisões de privacidade nesta fase da arquitetura.
