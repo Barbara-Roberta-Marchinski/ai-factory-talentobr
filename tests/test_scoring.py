@@ -25,6 +25,10 @@ VAGA = {
     "skills_obrigatorias": ["Python", "FastAPI", "Docker", "LLM", "PostgreSQL"],
 }
 
+@pytest.fixture(autouse=True)
+def limpar_cache_avaliacoes():
+    scoring.CACHE_AVALIACOES.clear()
+
 
 def test_score_heuristico_overlap_parcial():
     # 3 de 5 skills batem (case-insensitive) -> 60
@@ -141,9 +145,9 @@ def test_avaliar_com_llm_registra_hash_sem_dados_pessoais(caplog, monkeypatch):
     with caplog.at_level("INFO", logger=scoring.__name__):
         scoring.avaliar_com_llm(cv, VAGA)
 
-    assert f"cv_hash={cv_hash}" in caplog.text
-    assert "Iniciando avaliação" in caplog.text
-    assert "concluída com sucesso" in caplog.text
+    assert f"Referência: {cv_hash}_" in caplog.text
+    assert "[VOLUME] Iniciando Trace para avaliação" in caplog.text
+    assert "[QUALIDADE] Avaliação gerada pela IA com sucesso." in caplog.text
     assert "Pessoa Confidencial" not in caplog.text
     assert "pessoa@example.com" not in caplog.text
 
@@ -166,6 +170,46 @@ def test_avaliar_com_llm_registra_erro_sem_mensagem_potencialmente_sensivel(
     assert "tipo_erro=RuntimeError" in caplog.text
     assert "Pessoa Confidencial" not in caplog.text
     assert "pessoa@example.com" not in caplog.text
+
+
+def test_avaliar_com_llm_usa_cache_com_chave_de_cv_e_vaga(caplog, monkeypatch):
+    chamadas = []
+
+    def fake_chamar_llm(prompt):
+        chamadas.append(prompt)
+        return {"score_llm": 82, "justificativa": "Boa aderência"}
+
+    monkeypatch.setattr(scoring, "_chamar_llm", fake_chamar_llm)
+    cv = {"skills": ["Python"], "email": "pessoa@example.com"}
+
+    with caplog.at_level("INFO", logger=scoring.__name__):
+        primeira_resposta = scoring.avaliar_com_llm(cv, VAGA)
+        segunda_resposta = scoring.avaliar_com_llm(cv, VAGA)
+
+    assert len(chamadas) == 1
+    assert primeira_resposta == segunda_resposta
+    assert "[LATÊNCIA] Span LLM:" in caplog.text
+    assert "[LATÊNCIA] Span Cache:" in caplog.text
+    assert "[CUSTO] $0.00 e 0 tokens gastos (Economia via Cache)" in caplog.text
+    assert "pessoa@example.com" not in caplog.text
+
+    scoring.avaliar_com_llm(cv, {**VAGA, "titulo": "Outra vaga"})
+    assert len(chamadas) == 2
+
+
+def test_cache_de_avaliacao_devolve_copia_isolada(monkeypatch):
+    monkeypatch.setattr(
+        scoring,
+        "_chamar_llm",
+        lambda prompt: {"score_llm": 82, "justificativa": "Boa aderência"},
+    )
+    cv = {"skills": ["Python"]}
+
+    resposta = scoring.avaliar_com_llm(cv, VAGA)
+    resposta["score_llm"] = 0
+
+    resposta_cache = scoring.avaliar_com_llm(cv, VAGA)
+    assert resposta_cache["score_llm"] == 82
 
 
 def test_match_score_aplica_blend_0_4_0_6(monkeypatch):

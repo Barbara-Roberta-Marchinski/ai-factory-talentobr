@@ -6,6 +6,8 @@ import json
 import hashlib
 import logging
 import re
+import time
+from copy import deepcopy
 from pathlib import Path
 from anthropic import Anthropic
 
@@ -14,6 +16,7 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
 logger = logging.getLogger(__name__)
+CACHE_AVALIACOES = {}
 
 
 def sanitizar_pii(texto: str) -> str:
@@ -180,9 +183,28 @@ def avaliar_com_llm(cv_dict: dict, vaga_dict: dict) -> dict:
 
     Retorna {"score_llm": int, "justificativa": str}. Mockada nos testes.
     """
+    inicio_trace = time.time()
     cv_texto = json.dumps(cv_dict, ensure_ascii=False, sort_keys=True)
+    vaga_texto = json.dumps(vaga_dict, ensure_ascii=False, sort_keys=True)
     cv_hash = hashlib.sha256(cv_texto.encode("utf-8")).hexdigest()[:8]
-    logger.info("Iniciando avaliação do currículo cv_hash=%s", cv_hash)
+    vaga_hash = hashlib.sha256(vaga_texto.encode("utf-8")).hexdigest()[:8]
+    chave_cache = f"{cv_hash}_{vaga_hash}"
+    logger.info(
+        "[VOLUME] Iniciando Trace para avaliação do CV. Referência: %s",
+        chave_cache,
+    )
+
+    if chave_cache in CACHE_AVALIACOES:
+        latencia = time.time() - inicio_trace
+        logger.info(
+            "[LATÊNCIA] Span Cache: %.4fs (Cache Hit rápido)",
+            latencia,
+        )
+        logger.info("[CUSTO] $0.00 e 0 tokens gastos (Economia via Cache)")
+        logger.info(
+            "[QUALIDADE] Score recuperado com sucesso e consistência do cache."
+        )
+        return deepcopy(CACHE_AVALIACOES[chave_cache])
 
     candidato_sanitizado = sanitizar_pii(cv_texto)
     prompt = f"""Voce e um recrutador experiente. Avalie o match entre o candidato e a vaga.
@@ -197,18 +219,31 @@ CANDIDATO:
     try:
         out = _chamar_llm(prompt)
     except Exception as error:
+        logger.critical(
+            "[ALERTA P1] Sistema Parado! Falha Crítica na API do LLM. "
+            "Acionar plantão (on-call). Ref: %s",
+            chave_cache,
+        )
         logger.error(
-            "Falha na avaliação do currículo cv_hash=%s tipo_erro=%s",
-            cv_hash,
+            "[ERRO] Falha na avaliação Ref: %s tipo_erro=%s",
+            chave_cache,
             type(error).__name__,
         )
         raise
 
-    logger.info("Avaliação concluída com sucesso cv_hash=%s", cv_hash)
-    return {
+    resposta = {
         "score_llm": int(out.get("score_llm", 0)),
         "justificativa": out.get("justificativa", ""),
     }
+    latencia = time.time() - inicio_trace
+    logger.info("[LATÊNCIA] Span LLM: %.4fs (Cache Miss)", latencia)
+    logger.info(
+        "[CUSTO] Chamada ao provedor realizada; tokens e custo não disponíveis "
+        "neste fluxo."
+    )
+    logger.info("[QUALIDADE] Avaliação gerada pela IA com sucesso.")
+    CACHE_AVALIACOES[chave_cache] = deepcopy(resposta)
+    return resposta
 
 
 def match_score(cv_dict: dict, vaga_dict: dict) -> dict:
