@@ -8,6 +8,7 @@ Cobre:
 """
 
 from pathlib import Path
+from contextlib import nullcontext
 from types import SimpleNamespace
 
 import pytest
@@ -210,6 +211,33 @@ def test_cache_de_avaliacao_devolve_copia_isolada(monkeypatch):
 
     resposta_cache = scoring.avaliar_com_llm(cv, VAGA)
     assert resposta_cache["score_llm"] == 82
+
+
+def test_avaliar_com_llm_propaga_hash_anonimo_e_tag(monkeypatch):
+    context_args = {}
+
+    def fake_propagate_attributes(**kwargs):
+        context_args.update(kwargs)
+        return nullcontext()
+
+    monkeypatch.setattr(scoring, "propagate_attributes", fake_propagate_attributes)
+    monkeypatch.setattr(
+        scoring,
+        "_chamar_llm",
+        lambda prompt: {"score_llm": 80, "justificativa": "Boa aderência"},
+    )
+    cv = {"nome": "Pessoa Confidencial", "email": "pessoa@example.com"}
+    cv_texto = scoring.json.dumps(cv, ensure_ascii=False, sort_keys=True)
+    expected_hash = scoring.hashlib.sha256(
+        cv_texto.encode("utf-8")
+    ).hexdigest()[:8]
+
+    scoring.avaliar_com_llm(cv, VAGA)
+
+    assert context_args == {
+        "session_id": expected_hash,
+        "tags": ["cv_screening"],
+    }
 
 
 def test_match_score_aplica_blend_0_4_0_6(monkeypatch):

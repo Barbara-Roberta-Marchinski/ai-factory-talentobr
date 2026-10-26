@@ -45,7 +45,7 @@ O projeto utiliza variáveis de ambiente para gerenciar segredos sem expô-los n
 | `NEXT_PUBLIC_API_BASE_URL`| Sim (Front) | `http://localhost:8000` | URL onde o Backend (FastAPI) está rodando. |
 | `LANGFUSE_PUBLIC_KEY` | Sim (se usar métricas) | `pk-lf-...` | Chave pública para envio de traces ao painel do Langfuse. |
 | `LANGFUSE_SECRET_KEY` | Sim (se usar métricas) | `sk-lf-...` | Chave secreta de autenticação do Langfuse. |
-| `LANGFUSE_HOST` | Sim (se usar métricas) | `https://cloud.langfuse.com` | URL do servidor de observabilidade. |
+| `LANGFUSE_HOST` | Sim (se usar métricas) | `https://us.cloud.langfuse.com` | Host regional exibido nas configurações do projeto Langfuse. |
 
 ## 💻 Executar localmente
 
