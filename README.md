@@ -43,6 +43,9 @@ O projeto utiliza variáveis de ambiente para gerenciar segredos sem expô-los n
 | `ANTHROPIC_API_KEY` | Sim | `sk-ant-api03...` | Chave de acesso à API do provedor de LLM para gerar o score. |
 | `FRONTEND_ORIGINS` | Não | `http://localhost:3000` | URLs permitidas para requisição CORS. Separe por vírgulas. |
 | `NEXT_PUBLIC_API_BASE_URL`| Sim (Front) | `http://localhost:8000` | URL onde o Backend (FastAPI) está rodando. |
+| `LANGFUSE_PUBLIC_KEY` | Sim (se usar métricas) | `pk-lf-...` | Chave pública para envio de traces ao painel do Langfuse. |
+| `LANGFUSE_SECRET_KEY` | Sim (se usar métricas) | `sk-lf-...` | Chave secreta de autenticação do Langfuse. |
+| `LANGFUSE_HOST` | Sim (se usar métricas) | `https://cloud.langfuse.com` | URL do servidor de observabilidade. |
 
 ## 💻 Executar localmente
 
@@ -121,6 +124,7 @@ O TalentoBR leva a privacidade a sério e adota práticas rigorosas de DevSecOps
 ## 👁️ Observabilidade e Segurança
 - **Logs Seguros e Anonimizados:** Para garantir a coleta de métricas (volume, erros, latência) sem expor informações pessoais dos candidatos, nossos logs no backend utilizam um **hash criptográfico (SHA-256)** gerado a partir do currículo. Dados sensíveis nunca são impressos no terminal ou nos logs da nuvem.
 - **Segurança de Credenciais:** As chaves de API nunca são escritas diretamente no código ("hardcoded"). Se uma falha ou scanner (`gitleaks`) detectar a exposição de um token, nossa política de resposta a incidentes exige a imediata revogação no painel do provedor da API e a emissão de uma nova credencial.
+- Acompanhamos a saúde do sistema através do nosso painel principal: [🔗 Acessar Dashboard de Observabilidade (Langfuse)](https://us.cloud.langfuse.com/project/cmvokcfwy025gad0jzimbl0wh/traces)
 
 ## 🛠️ Troubleshooting (Resolução de Problemas Comuns)
 - **Erro de CORS no Frontend (Next.js vs FastAPI):** Se a interface web falhar ao conectar com o backend, verifique se a variável `FRONTEND_ORIGINS` no painel do Render contém a URL pública e exata do frontend, **sem a barra (/) no final** do domínio.

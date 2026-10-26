@@ -10,6 +10,7 @@ import time
 from copy import deepcopy
 from pathlib import Path
 from anthropic import Anthropic
+from langfuse.decorators import observe, langfuse_context
 
 logging.basicConfig(
     level=logging.INFO,
@@ -178,6 +179,7 @@ def score_heuristico(cv_dict: dict, vaga_dict: dict) -> int:
     return int(100 * overlap / total)
 
 
+@observe(capture_input=False, capture_output=False)
 def avaliar_com_llm(cv_dict: dict, vaga_dict: dict) -> dict:
     """Pede ao LLM um score 0-100 + justificativa curta em pt-BR.
 
@@ -187,6 +189,10 @@ def avaliar_com_llm(cv_dict: dict, vaga_dict: dict) -> dict:
     cv_texto = json.dumps(cv_dict, ensure_ascii=False, sort_keys=True)
     vaga_texto = json.dumps(vaga_dict, ensure_ascii=False, sort_keys=True)
     cv_hash = hashlib.sha256(cv_texto.encode("utf-8")).hexdigest()[:8]
+    langfuse_context.update_current_trace(
+        session_id=cv_hash,
+        tags=["cv_screening"],
+    )
     vaga_hash = hashlib.sha256(vaga_texto.encode("utf-8")).hexdigest()[:8]
     chave_cache = f"{cv_hash}_{vaga_hash}"
     logger.info(

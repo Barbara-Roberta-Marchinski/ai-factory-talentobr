@@ -17,3 +17,4 @@ python-dotenv==1.0.1
 # --- Testes (rodam offline, LLM mockado) ---
 pytest==8.3.4
 httpx==0.28.1   # necessário pro fastapi.testclient.TestClient
+langfuse==2.60.10
