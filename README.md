@@ -124,7 +124,57 @@ O TalentoBR leva a privacidade a sério e adota práticas rigorosas de DevSecOps
 ## 👁️ Observabilidade e Segurança
 - **Logs Seguros e Anonimizados:** Para garantir a coleta de métricas (volume, erros, latência) sem expor informações pessoais dos candidatos, nossos logs no backend utilizam um **hash criptográfico (SHA-256)** gerado a partir do currículo. Dados sensíveis nunca são impressos no terminal ou nos logs da nuvem.
 - **Segurança de Credenciais:** As chaves de API nunca são escritas diretamente no código ("hardcoded"). Se uma falha ou scanner (`gitleaks`) detectar a exposição de um token, nossa política de resposta a incidentes exige a imediata revogação no painel do provedor da API e a emissão de uma nova credencial.
-- Acompanhamos a saúde do sistema através do nosso painel principal: [🔗 Acessar Dashboard de Observabilidade (Langfuse)](https://us.cloud.langfuse.com/project/cmvokcfwy025gad0jzimbl0wh/traces)
+- **Métricas e Alertas (Langfuse)**
+Nossa aplicação está instrumentada com o SDK v5 do Langfuse (via OpenTelemetry), capturando Traces e Spans que cobrem o fluxo real do sistema (da API ao LLM) em produção no Render.
+
+🎯 5 Métricas Essenciais e Thresholds
+Definimos métricas de negócio e performance para garantir a resiliência e a viabilidade do projeto:
+
+Latência (p50, p95, p99)
+
+Threshold: p95 < 4,0s para requisições novas (Cache Miss) e p99 < 0,5s para requisições em cache (Cache Hit).
+
+Justificativa: Garantir UX fluida no frontend. Testes atuais demonstram processamento do LLM (Claude Haiku) em ~2,44s (dentro do limite) e retornos de cache em ~0,00s.
+
+Custo ($) e Consumo de Tokens
+
+Threshold: Alerta se o custo médio por análise exceder $ 0.05.
+
+Justificativa: Manter a viabilidade financeira do projeto. O sistema de Cache implementado evita chamadas redundantes, baixando o custo de reanálise para $ 0.00.
+
+Taxa de Erro (HTTP 500 / JSON Parse)
+
+Threshold: < 1% de falhas nas chamadas do modelo.
+
+Justificativa: O pipeline de avaliação matemática depende estritamente de um retorno JSON válido pelo LLM. Falhas quebram a interface do recrutador.
+
+Volume (Tráfego de Requisições)
+
+Threshold: Pico > 100 requisições/minuto.
+
+Justificativa: Prevenir ataques de exaustão (DDoS) no endpoint de score ou comportamento abusivo de bots que possam estourar a cota da Anthropic.
+
+Qualidade (Discrepância Heurística vs. LLM)
+
+Threshold: Variação maior que 40 pontos entre score_heuristico e score_llm.
+
+Justificativa: Monitorar alucinações da IA ou regras determinísticas demasiadamente rígidas. Serve como termômetro para calibração dos pesos.
+
+🚨 Alerta Funcional Configurado
+Implementamos monitoramento crítico de disponibilidade da engine de IA:
+
+Gatilho (Regra): Exceção ou Timeout não tratado na função de comunicação (_chamar_llm) da API.
+
+Prioridade: P1 (Crítica) - Sistema de triagem indisponível.
+
+Público-alvo: Equipe de SRE (Engenharia de Confiabilidade) e Desenvolvedores Backend.
+
+Canal: Disparo estruturado via logger no Console do Render (passível de integração via webhook para Slack #alertas-producao ou PagerDuty).
+
+📊 Dashboard Curado em Produção
+O painel abaixo comprova a instrumentação online com capturas reais das triagens realizadas.(https://us.cloud.langfuse.com/project/cmvokcfwy025gad0jzimbl0wh/traces)
+
+Evidências do Langfuse:Os painéis demonstram a saúde da aplicação com 24 observações capturadas, p95 de latência mantendo-se na margem de 2.32s, e o sucesso do cache (latência zero) garantindo o funcionamento esperado.
 
 ## 🛠️ Troubleshooting (Resolução de Problemas Comuns)
 - **Erro de CORS no Frontend (Next.js vs FastAPI):** Se a interface web falhar ao conectar com o backend, verifique se a variável `FRONTEND_ORIGINS` no painel do Render contém a URL pública e exata do frontend, **sem a barra (/) no final** do domínio.
