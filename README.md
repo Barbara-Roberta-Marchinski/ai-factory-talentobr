@@ -217,5 +217,20 @@ Para garantir a agilidade e a confiabilidade na integração e entrega contínua
 - **Erro HTTP 401 ou Timeout da Inteligência Artificial:** Isso geralmente significa que a variável de ambiente `ANTHROPIC_API_KEY` expirou, foi revogada por segurança ou está incorreta. Acesse o painel da Anthropic, gere uma nova chave, atualize no seu `.env` (ou no Render) e reinicie a aplicação.
 - **Currículo não extrai texto (Retorna Vazio ou com Score 0):** Como o sistema ainda não possui uma engine nativa de OCR (Reconhecimento Óptico de Caracteres), certifique-se de que o PDF enviado não é um "documento escaneado como imagem", mas sim um arquivo com camada de texto digitalmente selecionável.
 
+## 🚀 Otimização de Performance e Trade-offs
+Para escalar o sistema e reduzir gargalos, implementamos uma camada de **Cache em Memória** baseado em Hash Criptográfico (SHA-256) combinando o texto do currículo e os requisitos da vaga.
+
+### Medição: Antes e Depois (Reproduzível no Langfuse)
+- **Antes (Cache Miss - Chamada Real à IA):** 
+  - Latência média: ~2.44s a 2.99s.
+
+- **Depois (Cache Hit - Retorno da Memória):** 
+  - Latência: **0.00s** (instantâneo).
+ 
+### Análise de Trade-offs (Latência x Custo x Qualidade)
+- **O Ganho:** Trocamos tempo de processamento de rede (latência) e custo financeiro (API da Anthropic) por uso de memória RAM local. A qualidade da avaliação se mantém idêntica e perfeitamente consistente, pois o cache devolve exatamente o mesmo JSON gerado anteriormente.
+- **O Preço:** O trade-off direto é o consumo de Memória RAM do servidor no Render (que possui limite rígido de 512MB no plano gratuito). Como o dicionário de cache cresce a cada currículo inédito avaliado e não possui um mecanismo de expiração automática (TTL - Time to Live) configurado nesta versão, aplicações de longuíssima duração podem sofrer *Out of Memory* (OOM). Além disso, alterações mínimas no texto da vaga ou do CV geram um novo Hash, invalidando o reaproveitamento do cache.
+
+
 ## 📄 Licença
 Distribuído sob a licença MIT.
