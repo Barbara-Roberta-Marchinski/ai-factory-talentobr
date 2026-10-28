@@ -46,6 +46,15 @@ O projeto utiliza variáveis de ambiente para gerenciar segredos sem expô-los n
 | `LANGFUSE_PUBLIC_KEY` | Sim (se usar métricas) | `pk-lf-...` | Chave pública para envio de traces ao painel do Langfuse. |
 | `LANGFUSE_SECRET_KEY` | Sim (se usar métricas) | `sk-lf-...` | Chave secreta de autenticação do Langfuse. |
 | `LANGFUSE_HOST` | Sim (se usar métricas) | `https://us.cloud.langfuse.com` | Host regional exibido nas configurações do projeto Langfuse. |
+| `WEBHOOK_ALERTA` | Não (recomendado em produção) | URL do webhook | URL de entrada do workflow do Teams para receber erros da API. |
+
+Configure `WEBHOOK_ALERTA` no ambiente em que a API está executando (por exemplo,
+nas variáveis do serviço no Render), não no frontend. O backend envia alertas para
+exceções não tratadas, erros HTTP e requisições inválidas (HTTP 422). No Power
+Automate, remova condições que filtrem o evento se todos esses erros devem gerar
+uma mensagem; uma execução com condição "Falso" termina com êxito, mas não
+executa as ações do ramo verdadeiro. O log registra o status HTTP devolvido pelo
+workflow.
 
 ## 💻 Executar localmente
 

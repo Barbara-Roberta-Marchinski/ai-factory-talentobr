@@ -11,13 +11,63 @@ from copy import deepcopy
 from pathlib import Path
 from anthropic import Anthropic
 from langfuse import observe, propagate_attributes
+import requests
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s",
-)
 logger = logging.getLogger(__name__)
-CACHE_AVALIACOES = {}
+
+
+def disparar_alerta_erro(mensagem: str):
+    webhook_url = os.getenv("WEBHOOK_ALERTA")
+    if not webhook_url:
+        logger.warning(
+            "WEBHOOK_ALERTA não configurada; alerta não enviado."
+        )
+        return
+
+    try:
+        # Payload Adaptive Card envelopado para o novo Teams Workflows
+        payload = {
+            "type": "message",
+            "attachments": [
+                {
+                    "contentType": "application/vnd.microsoft.card.adaptive",
+                    "contentUrl": None,
+                    "content": {
+                        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                        "type": "AdaptiveCard",
+                        "version": "1.2",
+                        "body": [
+                            {
+                                "type": "TextBlock",
+                                "text": "🚨 ALERTA - Falha na aplicação",
+                                "weight": "Bolder",
+                                "size": "Medium",
+                                "color": "Attention"
+                            },
+                            {
+                                "type": "TextBlock",
+                                "text": mensagem,
+                                "wrap": True
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+        response = requests.post(webhook_url, json=payload, timeout=5)
+        if not 200 <= response.status_code < 300:
+            logger.error(
+                "Webhook de alerta respondeu com HTTP %s; alerta não confirmado.",
+                response.status_code,
+            )
+            return
+        logger.info("Alerta aceito pelo webhook (HTTP %s).", response.status_code)
+    except requests.RequestException as error:
+        # A exceção pode conter a URL secreta do workflow; não registrar sua mensagem.
+        logger.error(
+            "Falha ao enviar alerta webhook (%s).",
+            type(error).__name__,
+        )
 
 
 def sanitizar_pii(texto: str) -> str:
@@ -54,6 +104,8 @@ MODEL = "claude-haiku-4-5-20251001"
 # Pesos do blend. Hardcoded mesmo — TODO: virar config/env e justificar a escolha.
 PESO_HEURISTICA = 0.4
 PESO_LLM = 0.6
+
+CACHE_AVALIACOES = {}
 
 
 # ---------------------------------------------------------------------------
@@ -95,11 +147,7 @@ def _parse_json_object(text: str) -> dict:
 
 
 def _chamar_llm(prompt: str) -> dict:
-    """Faz uma chamada de chat pedindo JSON e devolve o dict já parseado.
-
-    Centralizado aqui de propósito: nos testes a gente faz monkeypatch DESTA
-    função, então nenhuma chamada de rede acontece offline.
-    """
+    """Faz uma chamada de chat pedindo JSON e devolve o dict já parseado."""
     client = _get_client()
     resp = client.messages.create(
         model=MODEL,
@@ -205,7 +253,6 @@ def avaliar_com_llm(cv_dict: dict, vaga_dict: dict) -> dict:
             inicio_trace=inicio_trace,
         )
 
-
 def _avaliar_com_llm_com_cache(
     cv_dict: dict,
     cv_texto: str,
@@ -238,11 +285,6 @@ CANDIDATO:
     try:
         out = _chamar_llm(prompt)
     except Exception as error:
-        logger.critical(
-            "[ALERTA P1] Sistema Parado! Falha Crítica na API do LLM. "
-            "Acionar plantão (on-call). Ref: %s",
-            chave_cache,
-        )
         logger.error(
             "[ERRO] Falha na avaliação Ref: %s tipo_erro=%s",
             chave_cache,

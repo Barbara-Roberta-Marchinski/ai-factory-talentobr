@@ -1,19 +1,84 @@
+import logging
 import os
 
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exception_handlers import (
+    http_exception_handler,
+    request_validation_exception_handler,
+)
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, Field
+from starlette.concurrency import run_in_threadpool
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import JSONResponse
 
-from src.scoring import extrair_campos, match_score
+from src.scoring import disparar_alerta_erro, extrair_campos, match_score
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="TalentoBR CV Screener API",
     version="0.5",
     description="Protótipo de triagem de CVs. APOIO à decisão humana, não decisão automática (LGPD Art. 20).",
 )
+
+
+def _contexto_erro(request: Request, status_code: int, tipo: str) -> str:
+    route = request.scope.get("route")
+    endpoint = getattr(route, "path", request.url.path)
+    return (
+        f"HTTP {status_code} em {request.method} {endpoint}. "
+        f"Tipo: {tipo}."
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def tratar_erro_validacao(
+    request: Request, error: RequestValidationError
+):
+    await run_in_threadpool(
+        disparar_alerta_erro,
+        _contexto_erro(request, 422, "RequestValidationError"),
+    )
+    return await request_validation_exception_handler(request, error)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def tratar_erro_http(request: Request, error: StarletteHTTPException):
+    if error.status_code >= 400:
+        await run_in_threadpool(
+            disparar_alerta_erro,
+            _contexto_erro(
+                request,
+                error.status_code,
+                "HTTPException",
+            )
+        )
+    return await http_exception_handler(request, error)
+
+
+@app.exception_handler(Exception)
+async def tratar_erro_interno(request: Request, error: Exception):
+    tipo_erro = type(error).__name__
+    logger.exception(
+        "Falha não tratada (%s) em %s %s",
+        tipo_erro,
+        request.method,
+        getattr(request.scope.get("route"), "path", request.url.path),
+    )
+    await run_in_threadpool(
+        disparar_alerta_erro,
+        _contexto_erro(request, 500, tipo_erro),
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error"},
+    )
+
 
 frontend_origins = [
     origin.strip()

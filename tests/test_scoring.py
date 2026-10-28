@@ -327,3 +327,69 @@ def test_chamar_llm_falha_sem_chave_anthropic(monkeypatch):
 
     with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
         scoring._chamar_llm("prompt de teste")
+
+
+def test_disparar_alerta_erro_registra_aceite_do_workflow(monkeypatch, caplog):
+    chamada = {}
+    caplog.set_level("INFO")
+    monkeypatch.setenv("WEBHOOK_ALERTA", "https://workflow.example/webhook")
+    monkeypatch.setattr(
+        scoring.requests,
+        "post",
+        lambda url, **kwargs: (
+            chamada.update(url=url, **kwargs) or SimpleNamespace(status_code=202)
+        ),
+    )
+
+    scoring.disparar_alerta_erro("Falha de teste")
+
+    assert chamada["url"] == "https://workflow.example/webhook"
+    assert chamada["timeout"] == 5
+    card = chamada["json"]["attachments"][0]["content"]
+    assert card["type"] == "AdaptiveCard"
+    assert card["body"][1]["text"] == "Falha de teste"
+    assert "aceito pelo webhook (HTTP 202)" in caplog.text
+
+
+def test_disparar_alerta_erro_registra_resposta_http_de_erro(monkeypatch, caplog):
+    monkeypatch.setenv("WEBHOOK_ALERTA", "https://workflow.example/webhook")
+    monkeypatch.setattr(
+        scoring.requests,
+        "post",
+        lambda *args, **kwargs: SimpleNamespace(status_code=400),
+    )
+
+    scoring.disparar_alerta_erro("Falha de teste")
+
+    assert "HTTP 400" in caplog.text
+    assert "não confirmado" in caplog.text
+
+
+def test_disparar_alerta_erro_avisa_quando_webhook_nao_esta_configurado(
+    monkeypatch, caplog
+):
+    monkeypatch.delenv("WEBHOOK_ALERTA", raising=False)
+    monkeypatch.setattr(
+        scoring.requests,
+        "post",
+        lambda *args, **kwargs: pytest.fail("Não deveria chamar o webhook."),
+    )
+
+    scoring.disparar_alerta_erro("Falha de teste")
+
+    assert "WEBHOOK_ALERTA não configurada" in caplog.text
+
+
+def test_chamar_llm_propaga_falha_para_handler_da_api(monkeypatch):
+    class FakeAnthropic:
+        def __init__(self, api_key):
+            self.messages = self
+
+        def create(self, **kwargs):
+            raise RuntimeError("falha simulada")
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setattr(scoring, "Anthropic", FakeAnthropic)
+
+    with pytest.raises(RuntimeError, match="falha simulada"):
+        scoring._chamar_llm("prompt de teste")

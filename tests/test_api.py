@@ -97,3 +97,48 @@ def test_score_endpoint_valida_payload(client):
     # falta `vaga` -> 422 do pydantic/FastAPI
     r = client.post("/score", json={"cv_texto": "só o cv"})
     assert r.status_code == 422
+
+
+def test_score_endpoint_dispara_alerta_em_erro_nao_tratado(monkeypatch):
+    alertas = []
+
+    def falhar(texto):
+        raise RuntimeError("falha simulada")
+
+    monkeypatch.setattr(
+        app_module,
+        "extrair_campos",
+        falhar,
+    )
+    monkeypatch.setattr(
+        app_module,
+        "disparar_alerta_erro",
+        lambda mensagem: alertas.append(mensagem),
+    )
+    client = TestClient(app_module.app, raise_server_exceptions=False)
+
+    response = client.post(
+        "/score",
+        json={"cv_texto": "CV", "vaga": {"titulo": "Engenheiro"}},
+    )
+
+    assert response.status_code == 500
+    assert len(alertas) == 1
+    assert "HTTP 500 em POST /score" in alertas[0]
+    assert "RuntimeError" in alertas[0]
+
+
+def test_score_endpoint_dispara_alerta_em_erro_de_validacao(monkeypatch):
+    alertas = []
+    monkeypatch.setattr(
+        app_module,
+        "disparar_alerta_erro",
+        lambda mensagem: alertas.append(mensagem),
+    )
+    client = TestClient(app_module.app)
+
+    response = client.post("/score", json={"cv_texto": "só o cv"})
+
+    assert response.status_code == 422
+    assert len(alertas) == 1
+    assert "HTTP 422 em POST /score" in alertas[0]
