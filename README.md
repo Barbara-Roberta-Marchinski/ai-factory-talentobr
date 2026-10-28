@@ -170,15 +170,26 @@ Implementamos monitoramento crítico de disponibilidade da engine de IA:
 - **Público-alvo:** Equipe Técnica / Desenvolvedores de Plantão (`@oncall`).
 - **Canal:** **Microsoft Teams** (Canal da Equipe). O disparo é feito instantaneamente via um Webhook que envia um *MessageCard* (Cartão Adaptável) nativo, forçando uma notificação push na tela da equipe.
 
+### 🔔 Alertas de Observabilidade Proativa (Langfuse)
+Além do alerta crítico de aplicação (P1), o sistema utiliza a engine nativa de alertas do Langfuse para monitorar a degradação contínua de performance, custo e qualidade. Os alertas configurados disparam notificações via Webhook para a equipe de SRE monitorar tendências antes que afetem severamente os usuários:
+
+- **Latência Alta (UX Degradada):** 
+  - **Regra:** Dispara se a duração da requisição (Trace Duration) for maior que `4.0s`.
+  - **Ação:** Notifica a equipe sobre possível lentidão na API da Anthropic ou gargalos de rede.
+- **Custo Anormal / Consumo Elevado:** 
+  - **Regra:** Dispara se o custo da análise (Cost) ultrapassar `$ 0.05` por execução.
+  - **Ação:** Previne gastos imprevistos com PDFs maliciosamente longos e protege o orçamento (FinOps).
+
 📊 Dashboard Curado em Produção
 O painel abaixo comprova a instrumentação online com capturas reais das triagens realizadas.
 🔗 **Link do Dashboard:** [Acessar Painel Langfuse](https://us.cloud.langfuse.com/project/cmvokcfwy025gad0jzimbl0wh/traces)
 
 
-![Print do Dashboard - Métricas Principais](docs/dashboard_metricas.png)
-![Print do Dashboard - Latência e Custo](docs/dashboard_latencia.png)
+![Print do Dashboard - Frequência e Custos](docs/dashboard_metricas.png)
+![Print do Dashboard - Latência](docs/dashboard_latencia.png)
+![Print do Dashboard - Rastreamento](docs/Rastreamento.png)
 
-**Evidências do Langfuse:** Os painéis demonstram a saúde da aplicação com 24 observações capturadas, p95 de latência mantendo-se na margem de 2.32s, e o sucesso do cache (latência zero) garantindo o funcionamento esperado, além da captura e alerta imediato de erros 500 gerados por falhas de integração.
+**Evidências do Langfuse:** **Evidências do Langfuse:** Os painéis demonstram a saúde da aplicação com 62 observações capturadas, com p95 em 28/10 de 2,23 com picos de latência mantendo-se na margem de 2.99s para requisições novas (Cache Miss), e o sucesso do cache operando com latência 0.00s, garantindo o funcionamento esperado. O painel também comprova a captura e alerta imediato de falhas (Status: erro), geradas durante os testes de integração e resiliência da API.
 
 ## 🛠️ Troubleshooting (Resolução de Problemas Comuns)
 - **Erro de CORS no Frontend (Next.js vs FastAPI):** Se a interface web falhar ao conectar com o backend, verifique se a variável `FRONTEND_ORIGINS` no painel do Render contém a URL pública e exata do frontend, **sem a barra (/) no final** do domínio.
