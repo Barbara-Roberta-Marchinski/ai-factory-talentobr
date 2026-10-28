@@ -48,13 +48,6 @@ O projeto utiliza variáveis de ambiente para gerenciar segredos sem expô-los n
 | `LANGFUSE_HOST` | Sim (se usar métricas) | `https://us.cloud.langfuse.com` | Host regional exibido nas configurações do projeto Langfuse. |
 | `WEBHOOK_ALERTA` | Não (recomendado em produção) | URL do webhook | URL de entrada do workflow do Teams para receber erros da API. |
 
-Configure `WEBHOOK_ALERTA` no ambiente em que a API está executando (por exemplo,
-nas variáveis do serviço no Render), não no frontend. O backend envia alertas para
-exceções não tratadas, erros HTTP e requisições inválidas (HTTP 422). No Power
-Automate, remova condições que filtrem o evento se todos esses erros devem gerar
-uma mensagem; uma execução com condição "Falso" termina com êxito, mas não
-executa as ações do ramo verdadeiro. O log registra o status HTTP devolvido pelo
-workflow.
 
 ## 💻 Executar localmente
 
@@ -169,21 +162,23 @@ Threshold: Variação maior que 40 pontos entre score_heuristico e score_llm.
 
 Justificativa: Monitorar alucinações da IA ou regras determinísticas demasiadamente rígidas. Serve como termômetro para calibração dos pesos.
 
-🚨 Alerta Funcional Configurado
+🚨Alerta Funcional Configurado
 Implementamos monitoramento crítico de disponibilidade da engine de IA:
 
-Gatilho (Regra): Exceção ou Timeout não tratado na função de comunicação (_chamar_llm) da API.
-
-Prioridade: P1 (Crítica) - Sistema de triagem indisponível.
-
-Público-alvo: Equipe de SRE (Engenharia de Confiabilidade) e Desenvolvedores Backend.
-
-Canal: Disparo estruturado via logger no Console do Render (passível de integração via webhook para Slack #alertas-producao ou PagerDuty).
+- **Gatilho (Regra):** Exceção, Timeout ou falha de Autenticação não tratada na função de comunicação (`_chamar_llm`) da API.
+- **Prioridade:** P1 (Crítica) - Sistema de triagem indisponível.
+- **Público-alvo:** Equipe Técnica / Desenvolvedores de Plantão (`@oncall`).
+- **Canal:** **Microsoft Teams** (Canal da Equipe). O disparo é feito instantaneamente via um Webhook que envia um *MessageCard* (Cartão Adaptável) nativo, forçando uma notificação push na tela da equipe.
 
 📊 Dashboard Curado em Produção
-O painel abaixo comprova a instrumentação online com capturas reais das triagens realizadas.(https://us.cloud.langfuse.com/project/cmvokcfwy025gad0jzimbl0wh/traces)
+O painel abaixo comprova a instrumentação online com capturas reais das triagens realizadas.
+🔗 **Link do Dashboard:** [Acessar Painel Langfuse](https://us.cloud.langfuse.com/project/cmvokcfwy025gad0jzimbl0wh/traces)
 
-Evidências do Langfuse:Os painéis demonstram a saúde da aplicação com 24 observações capturadas, p95 de latência mantendo-se na margem de 2.32s, e o sucesso do cache (latência zero) garantindo o funcionamento esperado.
+
+![Print do Dashboard - Métricas Principais](docs/dashboard_metricas.png)
+![Print do Dashboard - Latência e Custo](docs/dashboard_latencia.png)
+
+**Evidências do Langfuse:** Os painéis demonstram a saúde da aplicação com 24 observações capturadas, p95 de latência mantendo-se na margem de 2.32s, e o sucesso do cache (latência zero) garantindo o funcionamento esperado, além da captura e alerta imediato de erros 500 gerados por falhas de integração.
 
 ## 🛠️ Troubleshooting (Resolução de Problemas Comuns)
 - **Erro de CORS no Frontend (Next.js vs FastAPI):** Se a interface web falhar ao conectar com o backend, verifique se a variável `FRONTEND_ORIGINS` no painel do Render contém a URL pública e exata do frontend, **sem a barra (/) no final** do domínio.
