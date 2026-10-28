@@ -191,6 +191,27 @@ O painel abaixo comprova a instrumentação online com capturas reais das triage
 
 **Evidências do Langfuse:** **Evidências do Langfuse:** Os painéis demonstram a saúde da aplicação com 62 observações capturadas, com p95 em 28/10 de 2,23 com picos de latência mantendo-se na margem de 2.99s para requisições novas (Cache Miss), e o sucesso do cache operando com latência 0.00s, garantindo o funcionamento esperado. O painel também comprova a captura e alerta imediato de falhas (Status: erro), geradas durante os testes de integração e resiliência da API.
 
+### ☁️ Saúde do Deployment e Infraestrutura (Render)
+Além da observabilidade aplicacional via Langfuse, monitoramos a integridade do servidor diretamente na plataforma de nuvem (**Render**). Acompanhamos a saúde da instância através dos relatórios de utilização média e tráfego de rede nativos da plataforma:
+
+- **Média de Uso de Memória (Average Memory Utilization):** Acompanhamento contínuo (registrando níveis estáveis próximos a 20%) para evitar instabilidades ou erros de *Out of Memory* (OOM) ao processar as requisições.
+- **Média de Uso de CPU (Average CPU Utilization):** Observação de comportamento, registrando picos controlados (entre 20% e 30%) durante a avaliação e parseamento de múltiplos currículos simultâneos.
+- **Tráfego de Saída (Outbound Bandwidth):** Monitoramento do volume de dados (como o pico demonstrado de 0.25 MB) trafegados entre nossa API e os provedores externos.
+
+![Média de CPU e Memória - Render](docs/render_compute.png)
+![Tráfego de Rede - Render](docs/render_bandwidth.png)
+
+### 🔄 Saúde do Pipeline CI/CD (GitHub Actions)
+Para garantir a agilidade e a confiabilidade na integração e entrega contínua, monitoramos o desempenho dos nossos fluxos de trabalho nativos:
+
+- **Tempo Médio de Execução (Feedback Loop):** O fluxo de testes (`ci.yml`) apresenta um tempo médio de execução rápido de 34s[cite: 13]. 
+  - *Threshold:* Manter o tempo de CI abaixo de 2 minutos para garantir feedback imediato aos desenvolvedores.
+- **Taxa de Sucesso de Deploy:** O fluxo de entrega (`deploy.yml`) opera com 0% de falhas e tempo de 4s[cite: 13].
+  - *Threshold:* Manter a taxa de insucesso de deploy em 0%, assegurando que falhas sejam barradas na etapa de CI.
+- **Taxa Geral de Insucesso (Quality Gate):** A taxa geral de falhas nos trabalhos do repositório é de 5%[cite: 13], o que comprova que a esteira está barrando adequadamente commits com erros estruturais ou reprovações nos testes automatizados antes de chegarem a produção.
+
+![Métricas do GitHub Actions](docs/github_actions_metrics.png)
+
 ## 🛠️ Troubleshooting (Resolução de Problemas Comuns)
 - **Erro de CORS no Frontend (Next.js vs FastAPI):** Se a interface web falhar ao conectar com o backend, verifique se a variável `FRONTEND_ORIGINS` no painel do Render contém a URL pública e exata do frontend, **sem a barra (/) no final** do domínio.
 - **Erro HTTP 401 ou Timeout da Inteligência Artificial:** Isso geralmente significa que a variável de ambiente `ANTHROPIC_API_KEY` expirou, foi revogada por segurança ou está incorreta. Acesse o painel da Anthropic, gere uma nova chave, atualize no seu `.env` (ou no Render) e reinicie a aplicação.
