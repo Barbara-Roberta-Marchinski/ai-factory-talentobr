@@ -136,7 +136,8 @@ def score(req: ScoreRequest):
     Fluxo: texto bruto -> extração de campos (LLM) -> match_score (heurística + LLM).
     """
     cv_dict = extrair_campos(req.cv_texto)
+    cv_dict.pop("nome", None)
     vaga_dict = req.vaga.model_dump()
-    resultado = match_score(cv_dict, vaga_dict)
+    resultado = match_score(cv_dict, vaga_dict, cv_texto=req.cv_texto)
     resultado["candidato"] = cv_dict
     return resultado

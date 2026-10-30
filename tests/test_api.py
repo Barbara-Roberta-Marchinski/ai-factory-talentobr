@@ -89,8 +89,30 @@ def test_score_endpoint(client):
     assert data["score_heuristico"] == 60
     assert data["score_llm"] == 70
     assert data["score_final"] == 66
-    assert data["candidato"]["nome"] == "Candidato Teste"
+    assert "nome" not in data["candidato"]
     assert "Art. 20" in data["aviso"]
+
+
+def test_score_endpoint_encaminha_cv_texto_para_avaliacao(client, monkeypatch):
+    capturado = {}
+
+    def fake_avaliar_com_llm(cv_texto, vaga):
+        capturado["cv_texto"] = cv_texto
+        return {"score_llm": 70, "justificativa": "match razoável (mock)"}
+
+    monkeypatch.setattr(scoring, "avaliar_com_llm", fake_avaliar_com_llm)
+    cv_texto = "Currículo de teste com contato pessoa@example.com"
+
+    response = client.post(
+        "/score",
+        json={
+            "cv_texto": cv_texto,
+            "vaga": {"titulo": "Engenheiro", "skills_obrigatorias": []},
+        },
+    )
+
+    assert response.status_code == 200
+    assert capturado["cv_texto"] == cv_texto
 
 
 def test_score_endpoint_valida_payload(client):

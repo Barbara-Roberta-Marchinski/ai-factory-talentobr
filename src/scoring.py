@@ -10,7 +10,7 @@ import time
 from copy import deepcopy
 from pathlib import Path
 from anthropic import Anthropic
-from langfuse import observe, propagate_attributes
+from langfuse import get_client, observe, propagate_attributes
 import requests
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,46 @@ def disparar_alerta_erro(mensagem: str):
 
 
 def sanitizar_pii(texto: str) -> str:
-    """Substitui dados de contato e identificadores comuns antes do uso externo."""
+    """Redige PII conhecida e um nome provável no cabeçalho antes do uso externo.
+
+    A detecção de nome é heurística: cobre campos explícitos e a primeira linha
+    do currículo, mas pode falhar em formatos diferentes ou remover um título.
+    """
+    nome_token = r"[^\W\d_]+(?:['’\-][^\W\d_]+)*"
+    nome_padrao = rf"{nome_token}(?:\s+{nome_token}){{1,6}}"
+    nomes = [
+        match.group(1).strip()
+        for match in re.finditer(
+            rf"(?im)^\s*(?:nome(?:\s+completo)?|candidato)\s*[:=-]\s*"
+            rf"({nome_padrao})\s*(?=$|[,;|])",
+            texto,
+        )
+    ]
+    nomes.extend(
+        match.group(1).strip()
+        for match in re.finditer(
+            rf"""(?i)["']nome(?:\s+completo)?["']\s*:\s*["']"""
+            rf"({nome_padrao})"
+            rf"""["']""",
+            texto,
+        )
+    )
+
+    primeira_linha = next(
+        (linha.strip() for linha in texto.splitlines() if linha.strip()),
+        "",
+    )
+    if len(primeira_linha.split()) >= 2 and re.fullmatch(
+        nome_padrao, primeira_linha
+    ):
+        nomes.append(primeira_linha)
+
+    for nome in dict.fromkeys(nomes):
+        nome_regex = r"(?<!\w)" + r"\s+".join(
+            re.escape(parte) for parte in nome.split()
+        ) + r"(?!\w)"
+        texto = re.sub(nome_regex, "[NOME_REMOVIDO]", texto, flags=re.IGNORECASE)
+
     texto = re.sub(
         r"(?i)\b(?:https?://)?(?:www\.)?(?:linkedin\.com|github\.com)/[^\s<>()]+",
         "[LINK_REMOVIDO]",
@@ -181,25 +220,27 @@ def ler_texto_cv(path: str) -> str:
 def extrair_campos(texto: str) -> dict:
     """Usa o LLM pra transformar o texto bruto do CV em campos canônicos.
 
-    Retorna um dict com: nome, email, formacao[], experiencia[], skills[],
+    Retorna um dict com: email, formacao[], experiencia[], skills[],
     anos_experiencia_total. É esta função (via `_chamar_llm`) que os testes
     mockam.
     """
     texto_sanitizado = sanitizar_pii(texto)
     prompt = f"""Extraia do curriculo abaixo um JSON com os campos:
-- nome (string)
 - email (string)
 - formacao (lista de objetos: instituicao, curso, ano_conclusao)
 - experiencia (lista de objetos: empresa, cargo, periodo, descricao)
 - skills (lista de strings)
 - anos_experiencia_total (int)
 
-Responda APENAS com o JSON, sem markdown.
+Nao inclua nem tente inferir o nome do candidato. Responda APENAS com o JSON,
+sem markdown.
 
 CURRICULO:
 {texto_sanitizado}
 """
-    return _chamar_llm(prompt)
+    campos = _chamar_llm(prompt)
+    campos.pop("nome", None)
+    return campos
 
 
 def parse_cv(path: str) -> dict:
@@ -228,15 +269,19 @@ def score_heuristico(cv_dict: dict, vaga_dict: dict) -> int:
 
 
 @observe(capture_input=False, capture_output=False)
-def avaliar_com_llm(cv_dict: dict, vaga_dict: dict) -> dict:
+def avaliar_com_llm(cv_texto: str, vaga: dict) -> dict:
     """Pede ao LLM um score 0-100 + justificativa curta em pt-BR.
 
     Retorna {"score_llm": int, "justificativa": str}. Mockada nos testes.
     """
+    cv_sanitizado = sanitizar_pii(cv_texto)
+    get_client().update_current_span(
+        input={"cv_sanitizado": cv_sanitizado, "vaga": vaga}
+    )
+
     inicio_trace = time.time()
-    cv_texto = json.dumps(cv_dict, ensure_ascii=False, sort_keys=True)
-    vaga_texto = json.dumps(vaga_dict, ensure_ascii=False, sort_keys=True)
-    cv_hash = hashlib.sha256(cv_texto.encode("utf-8")).hexdigest()[:8]
+    vaga_texto = json.dumps(vaga, ensure_ascii=False, sort_keys=True)
+    cv_hash = hashlib.sha256(cv_sanitizado.encode("utf-8")).hexdigest()[:8]
 
     vaga_hash = hashlib.sha256(vaga_texto.encode("utf-8")).hexdigest()[:8]
     chave_cache = f"{cv_hash}_{vaga_hash}"
@@ -246,16 +291,15 @@ def avaliar_com_llm(cv_dict: dict, vaga_dict: dict) -> dict:
     )
     with propagate_attributes(session_id=cv_hash, tags=["cv_screening"]):
         return _avaliar_com_llm_com_cache(
-            cv_dict=cv_dict,
-            cv_texto=cv_texto,
-            vaga_dict=vaga_dict,
+            cv_sanitizado=cv_sanitizado,
+            vaga_dict=vaga,
             chave_cache=chave_cache,
             inicio_trace=inicio_trace,
         )
 
+
 def _avaliar_com_llm_com_cache(
-    cv_dict: dict,
-    cv_texto: str,
+    cv_sanitizado: str,
     vaga_dict: dict,
     chave_cache: str,
     inicio_trace: float,
@@ -272,7 +316,6 @@ def _avaliar_com_llm_com_cache(
         )
         return deepcopy(CACHE_AVALIACOES[chave_cache])
 
-    candidato_sanitizado = sanitizar_pii(cv_texto)
     prompt = f"""Voce e um recrutador experiente. Avalie o match entre o candidato e a vaga.
 Responda JSON com os campos: score_llm (0-100), justificativa (string curta em pt-BR).
 
@@ -280,7 +323,7 @@ VAGA:
 {json.dumps(vaga_dict, ensure_ascii=False, indent=2)}
 
 CANDIDATO:
-{candidato_sanitizado}
+{cv_sanitizado}
 """
     try:
         out = _chamar_llm(prompt)
@@ -296,6 +339,7 @@ CANDIDATO:
         "score_llm": int(out.get("score_llm", 0)),
         "justificativa": out.get("justificativa", ""),
     }
+
     latencia = time.time() - inicio_trace
     logger.info("[LATÊNCIA] Span LLM: %.4fs (Cache Miss)", latencia)
     logger.info(
@@ -306,15 +350,23 @@ CANDIDATO:
     CACHE_AVALIACOES[chave_cache] = deepcopy(resposta)
     return resposta
 
-
-def match_score(cv_dict: dict, vaga_dict: dict) -> dict:
+def match_score(
+    cv_dict: dict,
+    vaga_dict: dict,
+    cv_texto: str | None = None,
+) -> dict:
     """Combina heurística (0.4) + LLM (0.6) num score final 0-100.
 
     É APOIO à decisão do recrutador, NÃO decisão automática (LGPD Art. 20).
     A UI deve deixar isso explícito e permitir o recrutador discordar.
     """
     sh = score_heuristico(cv_dict, vaga_dict)
-    aval = avaliar_com_llm(cv_dict, vaga_dict)
+    texto_para_llm = (
+        cv_texto
+        if cv_texto is not None
+        else json.dumps(cv_dict, ensure_ascii=False, sort_keys=True)
+    )
+    aval = avaliar_com_llm(texto_para_llm, vaga_dict)
     score_llm = aval["score_llm"]
     score_final = int(PESO_HEURISTICA * sh + PESO_LLM * score_llm)
     return {

@@ -68,8 +68,10 @@ def test_parse_cv_le_arquivo_real_e_estrutura(monkeypatch):
     # asserts em ASCII de propósito (console Windows mangla acento) — prova
     # que o arquivo real foi lido e o texto chegou no prompt de extração.
     assert "FastAPI" in capturado["prompt"]
+    assert "JOÃO HENRIQUE DA SILVA NETO" not in capturado["prompt"]
     assert "joao.silva.exemplo@email-ficticio.com.br" not in capturado["prompt"]
     assert "[EMAIL_REMOVIDO]" in capturado["prompt"]
+    assert "nome" not in cv
     assert "FastAPI" in cv["skills"]
 
 
@@ -94,6 +96,21 @@ def test_sanitizar_pii_substitui_email_telefone_cpf_e_links():
 
 
 @pytest.mark.parametrize(
+    "texto",
+    [
+        "João Henrique da Silva Neto\nDesenvolvedor Backend Python",
+        "Nome: João Henrique da Silva Neto\nEmail: joao@example.com",
+        '{"nome": "João Henrique da Silva Neto", "skills": ["Python"]}',
+    ],
+)
+def test_sanitizar_pii_redige_nome_provavel(texto):
+    resultado = scoring.sanitizar_pii(texto)
+
+    assert "João Henrique da Silva Neto" not in resultado
+    assert "[NOME_REMOVIDO]" in resultado
+
+
+@pytest.mark.parametrize(
     "telefone",
     [
         "+55 (11) 98765-4321",
@@ -108,35 +125,45 @@ def test_sanitizar_pii_substitui_telefone_com_ou_sem_ddd_e_ddi(telefone):
     )
 
 
-def test_avaliar_com_llm_sanitiza_pii_do_cv_estruturado(monkeypatch):
+def test_avaliar_com_llm_sanitiza_pii_antes_de_enviar_para_llm_e_langfuse(
+    monkeypatch,
+):
     capturado = {}
+
+    class FakeLangfuseClient:
+        def update_current_span(self, **kwargs):
+            capturado.setdefault("spans", []).append(kwargs)
 
     def fake_chamar_llm(prompt: str) -> dict:
         capturado["prompt"] = prompt
         return {"score_llm": 80, "justificativa": "Boa aderência"}
 
     monkeypatch.setattr(scoring, "_chamar_llm", fake_chamar_llm)
+    monkeypatch.setattr(scoring, "get_client", FakeLangfuseClient)
 
-    scoring.avaliar_com_llm(
-        {
-            "email": "pessoa@example.com",
-            "telefone": "(11) 98765-4321",
-            "cpf": "123.456.789-00",
-            "linkedin": "https://linkedin.com/in/pessoa",
-        },
-        VAGA,
+    cv_texto = (
+        "email pessoa@example.com, telefone (11) 98765-4321, "
+        "CPF 123.456.789-00, LinkedIn https://linkedin.com/in/pessoa"
     )
+    scoring.avaliar_com_llm(cv_texto, VAGA)
 
     assert "pessoa@example.com" not in capturado["prompt"]
     assert "(11) 98765-4321" not in capturado["prompt"]
     assert "123.456.789-00" not in capturado["prompt"]
     assert "linkedin.com/in/pessoa" not in capturado["prompt"]
+    assert len(capturado["spans"]) == 1
+    span_input = capturado["spans"][0]["input"]
+    assert span_input["cv_sanitizado"] == scoring.sanitizar_pii(cv_texto)
+    assert span_input["vaga"] == VAGA
+    assert "pessoa@example.com" not in str(span_input)
 
 
 def test_avaliar_com_llm_registra_hash_sem_dados_pessoais(caplog, monkeypatch):
-    cv = {"nome": "Pessoa Confidencial", "email": "pessoa@example.com"}
-    cv_texto = scoring.json.dumps(cv, ensure_ascii=False, sort_keys=True)
-    cv_hash = scoring.hashlib.sha256(cv_texto.encode("utf-8")).hexdigest()[:8]
+    cv_texto = "Pessoa Confidencial pessoa@example.com"
+    cv_sanitizado = scoring.sanitizar_pii(cv_texto)
+    cv_hash = scoring.hashlib.sha256(
+        cv_sanitizado.encode("utf-8")
+    ).hexdigest()[:8]
     monkeypatch.setattr(
         scoring,
         "_chamar_llm",
@@ -144,7 +171,7 @@ def test_avaliar_com_llm_registra_hash_sem_dados_pessoais(caplog, monkeypatch):
     )
 
     with caplog.at_level("INFO", logger=scoring.__name__):
-        scoring.avaliar_com_llm(cv, VAGA)
+        scoring.avaliar_com_llm(cv_texto, VAGA)
 
     assert f"Referência: {cv_hash}_" in caplog.text
     assert "[VOLUME] Iniciando Trace para avaliação" in caplog.text
@@ -156,7 +183,7 @@ def test_avaliar_com_llm_registra_hash_sem_dados_pessoais(caplog, monkeypatch):
 def test_avaliar_com_llm_registra_erro_sem_mensagem_potencialmente_sensivel(
     caplog, monkeypatch
 ):
-    cv = {"nome": "Pessoa Confidencial"}
+    cv_texto = "Pessoa Confidencial pessoa@example.com"
 
     def fail_with_sensitive_message(prompt):
         raise RuntimeError("Falha para pessoa@example.com")
@@ -165,7 +192,7 @@ def test_avaliar_com_llm_registra_erro_sem_mensagem_potencialmente_sensivel(
 
     with caplog.at_level("ERROR", logger=scoring.__name__):
         with pytest.raises(RuntimeError, match="pessoa@example.com"):
-            scoring.avaliar_com_llm(cv, VAGA)
+            scoring.avaliar_com_llm(cv_texto, VAGA)
 
     assert "Falha na avaliação" in caplog.text
     assert "tipo_erro=RuntimeError" in caplog.text
@@ -181,11 +208,11 @@ def test_avaliar_com_llm_usa_cache_com_chave_de_cv_e_vaga(caplog, monkeypatch):
         return {"score_llm": 82, "justificativa": "Boa aderência"}
 
     monkeypatch.setattr(scoring, "_chamar_llm", fake_chamar_llm)
-    cv = {"skills": ["Python"], "email": "pessoa@example.com"}
+    cv_texto = "Skills: Python; email: pessoa@example.com"
 
     with caplog.at_level("INFO", logger=scoring.__name__):
-        primeira_resposta = scoring.avaliar_com_llm(cv, VAGA)
-        segunda_resposta = scoring.avaliar_com_llm(cv, VAGA)
+        primeira_resposta = scoring.avaliar_com_llm(cv_texto, VAGA)
+        segunda_resposta = scoring.avaliar_com_llm(cv_texto, VAGA)
 
     assert len(chamadas) == 1
     assert primeira_resposta == segunda_resposta
@@ -194,7 +221,7 @@ def test_avaliar_com_llm_usa_cache_com_chave_de_cv_e_vaga(caplog, monkeypatch):
     assert "[CUSTO] $0.00 e 0 tokens gastos (Economia via Cache)" in caplog.text
     assert "pessoa@example.com" not in caplog.text
 
-    scoring.avaliar_com_llm(cv, {**VAGA, "titulo": "Outra vaga"})
+    scoring.avaliar_com_llm(cv_texto, {**VAGA, "titulo": "Outra vaga"})
     assert len(chamadas) == 2
 
 
@@ -204,12 +231,12 @@ def test_cache_de_avaliacao_devolve_copia_isolada(monkeypatch):
         "_chamar_llm",
         lambda prompt: {"score_llm": 82, "justificativa": "Boa aderência"},
     )
-    cv = {"skills": ["Python"]}
+    cv_texto = "Skills: Python"
 
-    resposta = scoring.avaliar_com_llm(cv, VAGA)
+    resposta = scoring.avaliar_com_llm(cv_texto, VAGA)
     resposta["score_llm"] = 0
 
-    resposta_cache = scoring.avaliar_com_llm(cv, VAGA)
+    resposta_cache = scoring.avaliar_com_llm(cv_texto, VAGA)
     assert resposta_cache["score_llm"] == 82
 
 
@@ -226,13 +253,13 @@ def test_avaliar_com_llm_propaga_hash_anonimo_e_tag(monkeypatch):
         "_chamar_llm",
         lambda prompt: {"score_llm": 80, "justificativa": "Boa aderência"},
     )
-    cv = {"nome": "Pessoa Confidencial", "email": "pessoa@example.com"}
-    cv_texto = scoring.json.dumps(cv, ensure_ascii=False, sort_keys=True)
+    cv_texto = "Pessoa Confidencial pessoa@example.com"
+    cv_sanitizado = scoring.sanitizar_pii(cv_texto)
     expected_hash = scoring.hashlib.sha256(
-        cv_texto.encode("utf-8")
+        cv_sanitizado.encode("utf-8")
     ).hexdigest()[:8]
 
-    scoring.avaliar_com_llm(cv, VAGA)
+    scoring.avaliar_com_llm(cv_texto, VAGA)
 
     assert context_args == {
         "session_id": expected_hash,
