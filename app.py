@@ -15,8 +15,13 @@ from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse
+import logging
+logging.basicConfig(level=logging.INFO)
+
 
 from src.scoring import disparar_alerta_erro, extrair_campos, match_score
+
+
 
 logger = logging.getLogger(__name__)
 
