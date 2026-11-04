@@ -230,6 +230,21 @@ Para escalar o sistema e reduzir gargalos, implementamos uma camada de **Cache e
 - **O Ganho:** Trocamos tempo de processamento de rede (latência) e custo financeiro (API da Anthropic) por uso de memória RAM local. A qualidade da avaliação se mantém idêntica e perfeitamente consistente, pois o cache devolve exatamente o mesmo JSON gerado anteriormente.
 - **O Preço:** O trade-off direto é o consumo de Memória RAM do servidor no Render (que possui limite rígido de 512MB no plano gratuito). Como o dicionário de cache cresce a cada currículo inédito avaliado e não possui um mecanismo de expiração automática (TTL - Time to Live) configurado nesta versão, aplicações de longuíssima duração podem sofrer *Out of Memory* (OOM). Além disso, alterações mínimas no texto da vaga ou do CV geram um novo Hash, invalidando o reaproveitamento do cache.
 
+## 🤝 Como Contribuir
+
+Este projeto adota uma estratégia de versionamento estruturada desde o dia zero. Caso deseje contribuir, siga as diretrizes abaixo:
+
+**Estratégia de Branches:**
+- `main`: Reflete estritamente o ambiente de produção. Todo *commit* integrado à main aciona um *deploy* real na infraestrutura (toque com reverência!).
+- `dev`: Branch principal de integração para desenvolvimento de novas funcionalidades e testes.
+
+**Padrão de Commits:**
+Utilizamos a especificação de **Commits Convencionais** (ex: `feat:`, `fix:`, `docs:`, `chore:`) para manter a rastreabilidade e a geração automatizada de Changelogs.
+
+**Passo a passo:**
+1. Crie uma branch a partir de `dev` (`git checkout -b feature/sua-feature`).
+2. Faça seus commits seguindo o padrão convencional.
+3. Abra um Pull Request (PR) apontando para a branch `dev`.
 
 ## 📄 Licença
 Distribuído sob a licença MIT.
