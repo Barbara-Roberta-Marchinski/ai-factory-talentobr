@@ -13,7 +13,6 @@ Sistema de apoio à triagem de currículos composto por uma API FastAPI e uma in
 
 **URL de Produção:** https://talentobr-web.onrender.com/
 
-*(Coloque aqui uma captura de tela ou GIF demonstrando o sistema em uso)*
 ![Demonstração do Sistema](docs/demo.gif)
 
 ## 🎯 Problema e Solução
