@@ -6,7 +6,7 @@ Aceito — 2026-10-04
 ## Contexto
 O projeto TalentoBR foi evoluído de um protótipo em notebook isolado para uma arquitetura desacoplada (Stack B2), composta por um backend em **Python/FastAPI** (`app.py`) responsável pela heurística e orquestração com a API da Anthropic, e um frontend em **Next.js** exportado como site estático[cite: 5]. 
 
-Para atender aos requisitos da Etapa 1, precisávamos selecionar uma plataforma de hospedagem PaaS que fornecesse URLs públicas estáveis, suporte a CI/CD e baixo custo operacional. As diretrizes sugeriam alternativas comuns do mercado como o **Hugging Face Spaces** e a **Vercel**. Era necessário avaliar essas opções e justificar a escolha técnica.
+Precisávamos selecionar uma plataforma de hospedagem PaaS que fornecesse URLs públicas estáveis, suporte a CI/CD e baixo custo operacional. As diretrizes sugeriam alternativas comuns do mercado como o **Hugging Face Spaces** e a **Vercel**. Era necessário avaliar essas opções e justificar a escolha técnica.
 
 ## Decisão
 Adotar o **Render** como a plataforma PaaS unificada para hospedar o Web Service da API FastAPI e o Static Site do frontend Next.js.
@@ -33,3 +33,6 @@ Adotar o **Render** como a plataforma PaaS unificada para hospedar o Web Service
 
 * **Negativas:**
   * O plano gratuito do Web Service (API) no Render entra em modo de repouso (*sleep*) após 15 minutos sem requisições, gerando uma latência de 30 a 90 segundos no primeiro acesso do dia, o que exige um aquecimento prévio (*warm-up*) antes de avaliações ao vivo.
+
+  ### Mitigação e FinOps
+O plano gratuito foi escolhido para a fase de MVP (custo zero). O *capacity planning* já aprovou a futura migração da API para o plano *Starter* do Render (US$ 7,00/mês). Somado ao custo estimado da IA (US$ 21,00/mês para 10k currículos), a arquitetura resolve definitivamente o *cold start* mantendo a operação em ~US$ 28,00/mês, valor quase 90% abaixo do teto orçamentário de US$ 250 imposto pela Diretoria.

@@ -107,12 +107,6 @@ Para garantir a resiliência do sistema e cumprir os requisitos de estabilidade,
 ![Antes do Rollback](docs/Antes_do_Rollback.png) 
 ![Depois do Rollback](docs/Depois_do_Rollback.png)
 
-### 📊 FinOps e Capacity Planning
-A arquitetura foi desenhada para respeitar o teto orçamentário inegociável de US$ 250 mensais para o processamento de 10.000 currículos.
-
-* **Cenário Atual (Foco em Velocidade):** A utilização do modelo `claude-3-5-haiku` gera um custo estimado de **US$ 21,00/mês** para 10 mil triagens inéditas, consumindo menos de 10% do orçamento aprovado.
-
-* **Roadmap de Evolução (Foco em Profundidade):** Para vagas Sêniores e posições técnicas complexas, a arquitetura permite a substituição imediata (via variável de ambiente) para o modelo `claude-3-5-sonnet`. O *capacity planning* projeta um custo de **US$ 75,00/mês** para esse cenário, mantendo a operação escalável e com uma margem de segurança de 70% abaixo do limite financeiro imposto pela Diretoria.
 
 ## ⚠️ Limitações Conhecidas e Dívida Técnica
 Este repositório encontra-se na **Fase 2 (Deploy, LGPD e Observabilidade)** e herdou algumas dívidas técnicas do protótipo inicial que foram tratadas e documentadas:
@@ -217,6 +211,17 @@ Para garantir a agilidade e a confiabilidade na integração e entrega contínua
 - **Taxa Geral de Insucesso (Quality Gate):** A taxa geral de falhas nos trabalhos do repositório é de 5%[cite: 13], o que comprova que a esteira está barrando adequadamente commits com erros estruturais ou reprovações nos testes automatizados antes de chegarem a produção.
 
 ![Métricas do GitHub Actions](docs/github_actions_metrics.png)
+
+
+### 📊 FinOps e Capacity Planning
+A arquitetura foi desenhada para respeitar o teto orçamentário inegociável de US$ 250 mensais para o processamento de 10.000 currículos.
+
+* **Cenário Atual (Foco em Velocidade):** A utilização do modelo `claude-3-5-haiku` gera um custo estimado de **US$ 21,00/mês** para 10 mil triagens inéditas, consumindo menos de 10% do orçamento aprovado.
+
+* **Roadmap de Evolução (Foco em Profundidade):** Para vagas Sêniores e posições técnicas complexas, a arquitetura permite a substituição imediata (via variável de ambiente) para o modelo `claude-3-5-sonnet`. O *capacity planning* projeta um custo de **US$ 75,00/mês** para esse cenário, mantendo a operação escalável e com uma margem de segurança de 70% abaixo do limite financeiro imposto pela Diretoria.
+
+* **Observabilidade e Auditoria (Langfuse):** A plataforma opera sob o *Free Tier* (limite de 50.000 traces/mês), suportando folgadamente a meta de 10.000 currículos com custo US$ 0,00. Por ser *open-source*, a arquitetura evita *vendor lock-in*, permitindo que a TalentoBR hospede o serviço internamente (Self-Hosted) no futuro, caso o Comitê de Ética exija isolamento total dos logs para conformidade máxima com a LGPD.
+
 
 ## 🛠️ Troubleshooting (Resolução de Problemas Comuns)
 - **Erro de CORS no Frontend (Next.js vs FastAPI):** Se a interface web falhar ao conectar com o backend, verifique se a variável `FRONTEND_ORIGINS` no painel do Render contém a URL pública e exata do frontend, **sem a barra (/) no final** do domínio.
