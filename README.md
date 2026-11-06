@@ -107,6 +107,13 @@ Para garantir a resiliência do sistema e cumprir os requisitos de estabilidade,
 ![Antes do Rollback](docs/Antes_do_Rollback.png) 
 ![Depois do Rollback](docs/Depois_do_Rollback.png)
 
+### 📊 FinOps e Capacity Planning
+A arquitetura foi desenhada para respeitar o teto orçamentário inegociável de US$ 250 mensais para o processamento de 10.000 currículos.
+
+* **Cenário Atual (Foco em Velocidade):** A utilização do modelo `claude-3-5-haiku` gera um custo estimado de **US$ 21,00/mês** para 10 mil triagens inéditas, consumindo menos de 10% do orçamento aprovado.
+
+* **Roadmap de Evolução (Foco em Profundidade):** Para vagas Sêniores e posições técnicas complexas, a arquitetura permite a substituição imediata (via variável de ambiente) para o modelo `claude-3-5-sonnet`. O *capacity planning* projeta um custo de **US$ 75,00/mês** para esse cenário, mantendo a operação escalável e com uma margem de segurança de 70% abaixo do limite financeiro imposto pela Diretoria.
+
 ## ⚠️ Limitações Conhecidas e Dívida Técnica
 Este repositório encontra-se na **Fase 2 (Deploy, LGPD e Observabilidade)** e herdou algumas dívidas técnicas do protótipo inicial que foram tratadas e documentadas:
 - ~~**LGPD e Dados Pessoais:** O modelo atual não sanitiza PII antes de enviar ao LLM, configurando transferência internacional sem base legal.~~ ✅ **Resolvido:** Função de Regex aplicada obrigatoriamente no backend antes da chamada da IA.
