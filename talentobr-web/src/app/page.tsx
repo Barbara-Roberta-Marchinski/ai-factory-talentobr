@@ -730,10 +730,10 @@ export default function Home() {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-                        Score híbrido final
+                        COMPATIBILIDADE COM A VAGA
                       </p>
                       <p className="mt-1 text-sm text-slate-500">
-                        Síntese da análise heurística e semântica
+                        Grau de aderência do perfil aos requisitos da posição
                       </p>
                     </div>
                     <p className="shrink-0 text-4xl font-bold tabular-nums tracking-tight text-blue-700">
@@ -759,10 +759,13 @@ export default function Home() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <ScoreMetric
-                    label="Correspondência de skills"
+                    label="Requisitos Técnicos"
                     value={result.score_heuristico}
                   />
-                  <ScoreMetric label="Avaliação LLM" value={result.score_llm} />
+                  <ScoreMetric
+                    label="Análise Inteligente de Perfil"
+                    value={result.score_llm}
+                  />
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-white p-5">
