@@ -11,7 +11,13 @@ Sistema de apoio à triagem de currículos composto por uma API FastAPI e uma in
 
 ## 🚀 Acesso ao Sistema e Demonstração
 
-**URL de Produção:** https://talentobr-web.onrender.com/
+
+* **URL de Produção:** https://talentobr-web.onrender.com/
+* **Credenciais de Teste:** Não aplicável (acesso aberto ao MVP, sem tela de login).
+* **Janela de Uptime e Disponibilidade:** Aplicação hospedada em nuvem no Render com disponibilidade contínua (24/7) durante todo o período de avaliação (verificada desde `2026-10-05T01:21:58.386-03:00`).
+* **Nota sobre Cold Start (Free Tier):** Por operar no plano gratuito do Render na fase de MVP, o servidor da API hiberna após 15 minutos de inatividade. A primeira requisição pode levar de 30 a 90 segundos para "acordar" o serviço; após isso, as análises respondem em ~3 segundos.
+
+
 
 ![Demonstração do Sistema](docs/demo.gif)
 
@@ -108,18 +114,11 @@ Para garantir a resiliência do sistema e cumprir os requisitos de estabilidade,
 ![Depois do Rollback](docs/Depois_do_Rollback.png)
 
 
-## ⚠️ Limitações Conhecidas e Dívida Técnica
-Este repositório encontra-se na **Fase 2 (Deploy, LGPD e Observabilidade)** e herdou algumas dívidas técnicas do protótipo inicial que foram tratadas e documentadas:
-- ~~**LGPD e Dados Pessoais:** O modelo atual não sanitiza PII antes de enviar ao LLM, configurando transferência internacional sem base legal.~~ ✅ **Resolvido:** Função de Regex aplicada obrigatoriamente no backend antes da chamada da IA.
-- ~~**Auditoria (Art. 20 LGPD):** As triagens e avaliações do LLM não são rastreáveis.~~ ✅ **Mitigado:** Logs estruturados utilizando Hash Criptográfico (SHA-256) garantem a rastreabilidade sem exposição de dados pessoais.
-- **Viés Algorítmico (Ativo):** Testes preliminares do Data Team apontaram tendências de pontuação menor para perfis femininos, candidatos 50+ e regiões fora de capitais. Métricas de *fairness* serão implementadas antes de qualquer operação real com dados autênticos.
-- **Aviso de Dados:** Todos os currículos na pasta `data/cvs-exemplos/` são **estritamente sintéticos** e gerados para fins de validação e demonstração.
-
----
 
 ## 🛡️ Dados Pessoais e LGPD (Compliance)
 O TalentoBR leva a privacidade a sério e adota práticas rigorosas de DevSecOps e conformidade com a Lei Geral de Proteção de Dados (LGPD):
 - **Sanitização de PII (Art. 33):** Antes de qualquer dado ser enviado aos provedores de LLM externos (Anthropic/OpenAI nos EUA), o sistema executa uma limpeza obrigatória via Expressões Regulares (Regex), mascarando identificadores duros (CPF, Telefones, E-mails e URLs). Isso mitiga imediatamente o risco de transferência internacional de dados sensíveis.
+- **Auditoria e Revisão Humana (Art. 20): Todas as avaliações geram logs estruturados e imutáveis via Langfuse utilizando hash criptográfico (SHA-256), garantindo rastreabilidade sem expor dados pessoais.
 - **Governança e Política de Retenção:** Os currículos avaliados possuem retenção máxima de 6 meses (ciclo da vaga). O expurgo físico é realizado por um mecanismo real de varredura automatizada (script `scripts/limpeza_retencao.py`), garantindo a exclusão irreversível após o tempo de guarda estabelecido.
 - **Mapa de Dados e Bases Legais:** A justificativa legal para coleta (Execução de Contrato e Legítimo Interesse) e o fluxo de vida útil dos dados estão exaustivamente auditados e documentados internamente em nossa [Política de Governança, Ética e LGPD](docs/governanca-etica-e-lgpd.md).
 
@@ -216,11 +215,22 @@ Para garantir a agilidade e a confiabilidade na integração e entrega contínua
 ### 📊 FinOps e Capacity Planning
 A arquitetura foi desenhada para respeitar o teto orçamentário inegociável de US$ 250 mensais para o processamento de 10.000 currículos.
 
-* **Cenário Atual (Foco em Velocidade):** A utilização do modelo `claude-3-5-haiku` gera um custo estimado de **US$ 21,00/mês** para 10 mil triagens inéditas, consumindo menos de 10% do orçamento aprovado.
+* **Cenário Atual (Produção Estabilizada):** ~US$ 28/mês (~11% do orçamento aprovado, quase 90% abaixo do teto), compostos por ~US$ 21/mês de consumo de IA (claude-3-5-haiku para 10 mil triagens inéditas) + US$ 7/mês de infraestrutura always-on (Render Starter, eliminando cold start).
 
 * **Roadmap de Evolução (Foco em Profundidade):** Para vagas Sêniores e posições técnicas complexas, a arquitetura permite a substituição imediata (via variável de ambiente) para o modelo `claude-3-5-sonnet`. O *capacity planning* projeta um custo de **US$ 75,00/mês** para esse cenário, mantendo a operação escalável e com uma margem de segurança de 70% abaixo do limite financeiro imposto pela Diretoria.
 
 * **Observabilidade e Auditoria (Langfuse):** A plataforma opera sob o *Free Tier* (limite de 50.000 traces/mês), suportando folgadamente a meta de 10.000 currículos com custo US$ 0,00. Por ser *open-source*, a arquitetura evita *vendor lock-in*, permitindo que a TalentoBR hospede o serviço internamente (Self-Hosted) no futuro, caso o Comitê de Ética exija isolamento total dos logs para conformidade máxima com a LGPD.
+
+## ⚠️ Limitações Conhecidas e Roadmap Técnico (v1.1)
+
+Este repositório encontra-se na versão **v1.0 (MVP em Produção)**. As dívidas críticas de privacidade (sanitização de PII e trilha de auditoria LGPD) foram resolvidas nesta entrega. As limitações remanescentes do MVP e o plano de evolução para a **v1.1** estão detalhados abaixo:
+
+| Limitação Conhecida no MVP | Roadmap Técnico (v1.1) |
+| :--- | :--- |
+| **1. Comparação de Candidatos:** o sistema avalia cada currículo isoladamente, sem priorizar ou comparar perfis entre si em vagas com alto volume de inscritos. | **Ranking de Candidatos:** persistência em banco de dados relacional (**PostgreSQL**) e avaliação em lote, vinculando currículos à vaga para ordenar as notas e entregar automaticamente o **Top 10** mais aderentes ao RH. |
+| **2. Escalabilidade e Multi-tenant:** o cache em memória RAM reinicia a cada deploy (sem TTL) e a arquitetura ainda não possui autenticação nem isolamento de dados entre clientes. | **Arquitetura Multi-tenant Segura:** autenticação via **JWT** vinculada ao `empresa_id`, persistência em **PostgreSQL com Row-Level Security (RLS)** e migração do cache para **Redis** com chaves isoladas por cliente (garantindo sigilo entre as 600 empresas). |
+| **3. Governança e Viés Algorítmico:** ausência de monitoramento contínuo para auditar tendências da IA (ex: gênero, faixa etária 50+ ou região) e medir discordâncias em relação às decisões humanas. | **Painel de Justiça Algorítmica Nativo:** construção de dashboards diretamente no frontend em **Next.js** (ex: Recharts) — sem custo extra de licenças de BI externo — consumindo endpoints analíticos anonimizados via FastAPI para auditoria contínua pelo Comitê de Ética. |
+| **4. Entrada de Dados (PDFs Escaneados):** a extração atual requer texto digitalmente selecionável. | **Suporte a OCR:** integração futura de pipeline de OCR para leitura de currículos enviados como imagem ou PDF escaneado. |
 
 
 ## 🛠️ Troubleshooting (Resolução de Problemas Comuns)
